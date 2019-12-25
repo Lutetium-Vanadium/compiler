@@ -34,8 +34,10 @@ class ErrorBag:
             Error(f"TypeError: Expected type {expectedType}, got type {typeGotten}")
         )
 
-    def syntaxError(self, text):
-        self.report(Error(f"SyntaxError: {text} is syntactically incorrect"))
+    def syntaxError(self, text, reason=""):
+        if len(reason) > 0:
+            reason = "\n  - " + reason
+        self.report(Error(f"SyntaxError: {text} is syntactically incorrect.{reason}"))
 
     def nameError(self, name):
         self.report(Error(f"NameError: {name} is not a variable"))

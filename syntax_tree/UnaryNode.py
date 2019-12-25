@@ -14,7 +14,7 @@ class UnaryNode(Node):
         return f"Child: {self.child}, OperatorToken: {self.operatorToken}"
 
     def getChildren(self):
-        return self.child
+        return (self.child,)
 
 
 class UnaryOperatorNode(UnaryNode):

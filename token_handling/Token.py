@@ -4,20 +4,20 @@ from token_handling.TokenValue import TokenValue
 
 class Token:
     def __init__(self, value, token_type):
-        self.token = TokenValue(value, token_type)
         self.token_type = token_type
+        self.token_value = TokenValue(value, token_type)
 
     def __repr__(self):
-        return f"Value: '{self.token.value}', Type: {self.token_type}"
+        return f"Value: '{self.token_value.value}', Type: {self.token_type}"
 
     def __str__(self):
-        return f"Value: '{self.token.value}', Type: {self.token_type}"
+        return f"Value: '{self.token_value.value}', Type: {self.token_type}"
 
     def isInstance(self, *args):
         return self.token_type in args
 
     def evaluate(self):
-        return self.token.value
+        return self.token_value.value
 
 
 OPEN_PARAN_TOKEN = Token("(", TokenTypes.OpenParan)

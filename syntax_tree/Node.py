@@ -20,19 +20,17 @@ class Node:
         print_color(indent, fg=LIGHT_GRAY, end="")
         print_color(marker, fg=LIGHT_GRAY, end="")
 
-        if isinstance(node, Token):
-            isNode = False
+        if len(node.getChildren()) == 0:
+            hasChildren = False
             print_color(" ", fg=LIGHT_GRAY, end="")
-            print_color(node, fg=LIGHT_GRAY, end="")
+            print_color(node, fg=LIGHT_GRAY)
         else:
-            isNode = True
-            print_color(node.operatorToken, fg=LIGHT_GRAY, end="")
-
-        print()
+            hasChildren = True
+            print_color(node.operatorToken, fg=LIGHT_GRAY)
 
         indent += "   " if isLast else "│  "
 
-        if isNode:
+        if hasChildren:
             lastChild = node.getLastChild()
 
             for child in node.getChildren():
