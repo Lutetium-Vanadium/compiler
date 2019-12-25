@@ -1,5 +1,5 @@
-from token_handleing.TokenTypes import *
-from token_handleing.Token import Token
+from token_handling.TokenTypes import *
+from token_handling.Token import Token
 from keywords.Keywords import KEYWORDS
 
 OPERATORS = "+-*/%^()|&<=>!"

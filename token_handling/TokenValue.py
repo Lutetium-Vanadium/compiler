@@ -1,5 +1,5 @@
-from token_handleing.TokenTypes import TokenTypes
-from types.Types import Types
+from token_handling.TokenTypes import TokenTypes
+from type_handling.Types import Types
 
 
 class TokenValue:

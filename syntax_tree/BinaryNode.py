@@ -1,4 +1,4 @@
-from token_handleing.TokenTypes import *
+from token_handling.TokenTypes import *
 
 
 class BinaryNode:

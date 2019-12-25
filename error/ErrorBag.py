@@ -1,4 +1,5 @@
 from error.Error import Error
+from printing.print_color import print_color, RED
 
 
 class ErrorBag:
@@ -16,7 +17,7 @@ class ErrorBag:
     def prt(self):
         print()
         for error in self.errors:
-            print(f"\033[91m {error} \033[00m")
+            print_color("   ", error, fg=RED)
         print()
 
     def clear(self):

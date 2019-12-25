@@ -1,6 +1,6 @@
 from lexer import Lexer
-from token_handleing.TokenTypes import *
-from token_handleing.Token import *
+from token_handling.TokenTypes import *
+from token_handling.Token import *
 from syntax_tree.BinaryNode import *
 from syntax_tree.UnaryNode import *
 
