@@ -19,4 +19,7 @@ class UnaryOperatorNode(UnaryNode):
         if self.operatorToken.token_type == TokenTypes.MinusOperator:
             return -self.child.evaluate()
         
+        if self.operatorToken.token_type == TokenTypes.NotOperator:
+            return not self.child.evaluate()
+        
         return self.child.evaluate()

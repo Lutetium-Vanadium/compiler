@@ -39,6 +39,8 @@ class BinaryOperatorNode(BinaryNode):
             return self.left.evaluate() or self.right.evaluate()
         if self.operatorToken.token_type == TokenTypes.AndOperator:
             return self.left.evaluate() and self.right.evaluate()
+        if self.operatorToken.token_type == TokenTypes.NEOperator:
+            return self.left.evaluate() != self.right.evaluate()
         if self.operatorToken.token_type == TokenTypes.EEOperator:
             return self.left.evaluate() == self.right.evaluate()
         if self.operatorToken.token_type == TokenTypes.GEOperator:

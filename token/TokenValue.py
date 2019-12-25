@@ -3,10 +3,6 @@ from Types import Types
 
 class TokenValue():
     def __init__(self, value, token_type):
-        if token_type == TokenTypes.Number:
-            value = float(value)
-            if value.is_integer():
-                value = int(value)
         self.value = value
         self.type = self.getType(value)
     

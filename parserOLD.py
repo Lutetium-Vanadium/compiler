@@ -33,7 +33,7 @@ class Parser():
         while i < len(tokenList)-1:
             if debug: print(i)
 
-            if tokenList[i].isInstance(TokenTypes.Text):
+            if tokenList[i].isInstance(TokenTypes.Variable):
                 text = tokenList[i].token.value
                 if tokenList[i+1].isInstance(TokenTypes.AssignmentOperator):
                     prevI = i
@@ -88,8 +88,8 @@ class Parser():
                 opStack.pop()
 
             elif cur.isInstance(*OPERATOR_TYPES):
-                if i > 0 and tokenList[i-1].isInstance(*OPERATOR_TYPES):
-                    if i >= len(tokenList) - 1:
+                if cur.isInstance(TokenTypes.NotOperator) or i > 0 and tokenList[i-1].isInstance(*OPERATOR_TYPES):
+                    if i <= len(tokenList) - 1:
                         postFix.append(UnaryOperatorNode(tokenList[i+1], cur))
                     else:
                         self.errorBag.syntaxError(self.text)

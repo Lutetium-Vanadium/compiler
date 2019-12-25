@@ -3,15 +3,16 @@ import os
 import sys
 
 FOLDERS = (
-    "token",
-    "types",
     "error",
-    "syntax_tree"
+    "token",
+    "keywords",
+    "syntax_tree",
+    "types"
 )
 
 sys.path.extend(FOLDERS)
 
-from parser import Parser
+from parserOLD import Parser
 from ErrorBag import ErrorBag
 
 if len(sys.argv) > 1:

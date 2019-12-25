@@ -6,13 +6,16 @@ class TokenTypes(Enum):
 
     # Regular Text
     Whitespace = auto()
-    Text = auto()
     Number = auto()
     Boolean = auto()
+    String = auto()
+    Variable = auto()
+    Keyword = auto()
     EOL = auto()
 
     # General type for Operators during lexing
     Operator = auto()
+    Text = auto()
 
     # Operators
     PlusOperator = auto()           # +
@@ -21,11 +24,14 @@ class TokenTypes(Enum):
     SlashOperator = auto()          # /
     ModOperator = auto()            # %
     CarotOperator = auto()          # ^
+    PlusPlusOperator = auto()       # ++
 
     # Boolean Operators
     OrOperator = auto()             # ||
-    EEOperator = auto()             # ==
     AndOperator = auto()            # &&
+    NotOperator = auto()            # !
+    NEOperator = auto()             # !=
+    EEOperator = auto()             # ==
     LTOperator = auto()             # <
     GTOperator = auto()             # >
     LEOperator = auto()             # <=
@@ -45,10 +51,14 @@ OPERATOR_TYPES = (
     TokenTypes.SlashOperator,
     TokenTypes.ModOperator,
     TokenTypes.CarotOperator,
+    TokenTypes.PlusPlusOperator,
     TokenTypes.OpenParan,
     TokenTypes.CloseParan,
+
     TokenTypes.OrOperator,
     TokenTypes.AndOperator,
+    TokenTypes.NotOperator,
+    TokenTypes.NEOperator,
     TokenTypes.EEOperator,
     TokenTypes.LTOperator,
     TokenTypes.GTOperator,
@@ -62,6 +72,7 @@ OPERATOR_PRECEDENCE = {
     TokenTypes.CloseParan:     -1,
     TokenTypes.OrOperator:      0,
     TokenTypes.AndOperator:     1,
+    TokenTypes.NEOperator:      2,
     TokenTypes.EEOperator:      2,
     TokenTypes.LTOperator:      2,
     TokenTypes.GTOperator:      2,
@@ -72,7 +83,7 @@ OPERATOR_PRECEDENCE = {
     TokenTypes.StarOperator:    4,
     TokenTypes.SlashOperator:   4,
     TokenTypes.ModOperator:     5,
-    TokenTypes.CarotOperator:   6,
+    TokenTypes.CarotOperator:   6
 }
 
 ARITHMETIC_OPERATORS = (
@@ -86,8 +97,10 @@ ARITHMETIC_OPERATORS = (
 
 BOOLEAN_OPERATORS = (
     TokenTypes.OrOperator,
-    TokenTypes.EEOperator,
     TokenTypes.AndOperator,
+    TokenTypes.NotOperator,
+    TokenTypes.NEOperator,
+    TokenTypes.EEOperator,
     TokenTypes.LTOperator,
     TokenTypes.GTOperator,
     TokenTypes.LEOperator,

@@ -1,50 +1,15 @@
 from TokenTypes import *
 from Token import Token
+from Keywords import KEYWORDS
 
-OPERATORS = "+-*/%^()|&<=>"
-
-def getOperatorType(operator):
-    if operator == "+":
-        return TokenTypes.PlusOperator
-    if operator == "-":
-        return TokenTypes.MinusOperator
-    if operator == "*":
-        return TokenTypes.StarOperator
-    if operator == "/":
-        return TokenTypes.SlashOperator
-    if operator == "%":
-        return TokenTypes.ModOperator
-    if operator == "^":
-        return TokenTypes.CarotOperator
-    if operator == "(":
-        return TokenTypes.OpenParan
-    if operator == ")":
-        return TokenTypes.CloseParan
-    if operator == "||":
-        return TokenTypes.OrOperator
-    if operator == "&&":
-        return TokenTypes.AndOperator
-    if operator == ">=":
-        return TokenTypes.GEOperator
-    if operator == ">":
-        return TokenTypes.GTOperator
-    if operator == "<=":
-        return TokenTypes.LEOperator
-    if operator == "<":
-        return TokenTypes.LTOperator
-    if operator == "==":
-        return TokenTypes.EEOperator
-    if operator == "=":
-        return TokenTypes.AssignmentOperator
-    
-    # If it reaches here, Python is probably dying, abort
-    raise Exception(f"Unrecognised Operator '{operator}'")
+OPERATORS = "+-*/%^()|&<=>!"
 
 class Lexer():
     def __init__(self, errorBag):
         self.text = ""
         self.list = []
         self.errorBag = errorBag
+        self.index = 0
     
     def __str__(self):
         return str(self.list)
@@ -63,48 +28,126 @@ class Lexer():
             # A generalised operator type, will be seperated out to the various operators later
             return TokenTypes.Operator
 
-        try:
-            float(char)
+        if char.isdigit() or char == ".":
             return TokenTypes.Number
-        except:
-            self.errorBag.badCharError(char)
-            return TokenTypes.Bad
+
+        self.errorBag.badCharError(char)
+        return TokenTypes.Bad
+    
+    def get_current_type(self):
+        return self.get_type(self.text[self.index])
     
     def lex(self, text):
         self.text = text
         self.list = []
+        self.index = 0
         self.split()
         # print("\n", self, "\n")
         return self.list
     
     def appendToken(self, word, word_type):
-        if word_type == TokenTypes.Number:
-            self.list.append(Token(word, word_type))
-        elif word_type == TokenTypes.Operator:
-            self.list.append(Token(word, getOperatorType(word)))
-        elif word_type == TokenTypes.Text and (word == "true" or word == "false"):
-            self.list.append(Token(word == "true", TokenTypes.Boolean))
-        else:
-            self.list.append(Token(word, word_type))
+        self.list.append(Token(word, word_type))
 
     def split(self):
-        word = ""
-        word_type = None
+        while self.index < len(self.text):
+            cur_type = self.get_current_type()
 
-        for i in range(len(self.text)):
-            cur = self.text[i]
-            cur_type = self.get_type(cur)
-
-            if len(word) == 0:
-                word_type = cur_type
-                word += cur
-
-            elif cur_type == word_type:
-                word += cur
+            if cur_type == TokenTypes.Whitespace:
+                self.lexWhitespace()
+            
+            elif cur_type == TokenTypes.Text:
+                self.lexText()
+            
+            elif cur_type == TokenTypes.Number:
+                self.lexNumber()
+            
+            elif cur_type == TokenTypes.Operator:
+                self.lexOperator()
 
             else:
-                self.appendToken(word, word_type)
-                word = cur
-                word_type = cur_type
+                self.index += 1
+
+    def get_same_block(self, token_type):
+        start = self.index
+        while self.index < len(self.text) and self.get_current_type() == token_type:
+            self.index += 1
+        return self.text[start:self.index]
         
-        self.appendToken(word, word_type)
+    def lexWhitespace(self):
+        whitespace = self.get_same_block(TokenTypes.Whitespace)
+        self.appendToken(whitespace, TokenTypes.Whitespace)
+    
+    def lexText(self):
+        text = self.get_same_block(TokenTypes.Text)
+
+        if text in KEYWORDS: 
+            self.appendToken(text, TokenTypes.Keyword)
+        elif text == "true" or text == "false":
+            self.appendToken(text == "true", TokenTypes.Boolean)
+        else:
+            self.appendToken(text, TokenTypes.Variable)
+    
+    def lexNumber(self):
+        num = self.get_same_block(TokenTypes.Number)
+        num = float(num)
+        if num.is_integer():
+            num = int(num)
+        self.appendToken(num, TokenTypes.Number)
+    
+    def lexOperator(self):
+        cur = self.text[self.index]
+        if self.index < len(self.text)-1:
+            nxt = self.text[self.index + 1]
+        else:
+            nxt = "\0"
+        self.index += 1
+
+        if cur == "+":
+            self.appendToken("+", TokenTypes.PlusOperator)
+        elif cur == "-":
+            self.appendToken("-", TokenTypes.MinusOperator)
+        elif cur == "*":
+            self.appendToken("*", TokenTypes.StarOperator)
+        elif cur == "/":
+            self.appendToken("/", TokenTypes.SlashOperator)
+        elif cur == "%":
+            self.appendToken("%", TokenTypes.ModOperator)
+        elif cur == "^":
+            self.appendToken("^", TokenTypes.CarotOperator)
+        elif cur == "(":
+            self.appendToken("(", TokenTypes.OpenParan)
+        elif cur == ")":
+            self.appendToken(")", TokenTypes.CloseParan)
+        elif cur == nxt == "|":
+            self.index += 1
+            self.appendToken("||", TokenTypes.OrOperator)
+        elif cur == nxt == "&":
+            self.index += 1
+            self.appendToken("&&", TokenTypes.AndOperator)
+        elif cur == "!":
+            if nxt == "=":
+                self.index += 1
+                self.appendToken("!=", TokenTypes.NEOperator)
+            else:
+                self.appendToken("!", TokenTypes.NotOperator)
+        elif cur == ">":
+            if nxt == "=":
+                self.index += 1
+                self.appendToken(">=", TokenTypes.GEOperator)
+            else:
+                self.appendToken(">", TokenTypes.GTOperator)
+        elif cur == "<":
+            if nxt == "=":
+                self.index += 1
+                self.appendToken("<=", TokenTypes.LEOperator)
+            else:
+                self.appendToken("<", TokenTypes.LTOperator)
+        elif cur == "=":
+            if nxt == "=":
+                self.index += 1
+                self.appendToken("==", TokenTypes.EEOperator)
+            else:
+                self.appendToken("=", TokenTypes.AssignmentOperator)
+        
+        else:
+            raise SyntaxError("Unknown Operator ", cur, nxt)
