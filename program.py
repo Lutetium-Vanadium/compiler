@@ -1,19 +1,8 @@
 #!/usr/bin/python3
 import os
 import sys
-
-FOLDERS = (
-    "error",
-    "token",
-    "keywords",
-    "syntax_tree",
-    "types"
-)
-
-sys.path.extend(FOLDERS)
-
 from parserOLD import Parser
-from ErrorBag import ErrorBag
+from error.ErrorBag import ErrorBag
 
 if len(sys.argv) > 1:
     debug = sys.argv[1] == "true"
@@ -29,7 +18,7 @@ bash = False
 variables = {}
 
 while True:
-    print("$" if bash else "->" , end=" ")
+    print("$" if bash else "->", end=" ")
     expression = input()
 
     if len(expression) == 0:
@@ -59,7 +48,7 @@ while True:
         continue
 
     variables, val = parser.parse(expression, variables, debug)
-    
+
     if errorBag.any():
         errorBag.prt()
         errorBag.clear()

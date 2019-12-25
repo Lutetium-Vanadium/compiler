@@ -1,19 +1,20 @@
-from TokenTypes import *
-from Token import Token
-from Keywords import KEYWORDS
+from token_handleing.TokenTypes import *
+from token_handleing.Token import Token
+from keywords.Keywords import KEYWORDS
 
 OPERATORS = "+-*/%^()|&<=>!"
 
-class Lexer():
+
+class Lexer:
     def __init__(self, errorBag):
         self.text = ""
         self.list = []
         self.errorBag = errorBag
         self.index = 0
-    
+
     def __str__(self):
         return str(self.list)
-    
+
     def __repr__(self):
         return str(self.list)
 
@@ -33,10 +34,10 @@ class Lexer():
 
         self.errorBag.badCharError(char)
         return TokenTypes.Bad
-    
+
     def get_current_type(self):
         return self.get_type(self.text[self.index])
-    
+
     def lex(self, text):
         self.text = text
         self.list = []
@@ -44,7 +45,7 @@ class Lexer():
         self.split()
         # print("\n", self, "\n")
         return self.list
-    
+
     def appendToken(self, word, word_type):
         self.list.append(Token(word, word_type))
 
@@ -54,13 +55,13 @@ class Lexer():
 
             if cur_type == TokenTypes.Whitespace:
                 self.lexWhitespace()
-            
+
             elif cur_type == TokenTypes.Text:
                 self.lexText()
-            
+
             elif cur_type == TokenTypes.Number:
                 self.lexNumber()
-            
+
             elif cur_type == TokenTypes.Operator:
                 self.lexOperator()
 
@@ -71,32 +72,32 @@ class Lexer():
         start = self.index
         while self.index < len(self.text) and self.get_current_type() == token_type:
             self.index += 1
-        return self.text[start:self.index]
-        
+        return self.text[start : self.index]
+
     def lexWhitespace(self):
         whitespace = self.get_same_block(TokenTypes.Whitespace)
         self.appendToken(whitespace, TokenTypes.Whitespace)
-    
+
     def lexText(self):
         text = self.get_same_block(TokenTypes.Text)
 
-        if text in KEYWORDS: 
+        if text in KEYWORDS:
             self.appendToken(text, TokenTypes.Keyword)
         elif text == "true" or text == "false":
             self.appendToken(text == "true", TokenTypes.Boolean)
         else:
             self.appendToken(text, TokenTypes.Variable)
-    
+
     def lexNumber(self):
         num = self.get_same_block(TokenTypes.Number)
         num = float(num)
         if num.is_integer():
             num = int(num)
         self.appendToken(num, TokenTypes.Number)
-    
+
     def lexOperator(self):
         cur = self.text[self.index]
-        if self.index < len(self.text)-1:
+        if self.index < len(self.text) - 1:
             nxt = self.text[self.index + 1]
         else:
             nxt = "\0"
@@ -148,6 +149,6 @@ class Lexer():
                 self.appendToken("==", TokenTypes.EEOperator)
             else:
                 self.appendToken("=", TokenTypes.AssignmentOperator)
-        
+
         else:
             raise SyntaxError("Unknown Operator ", cur, nxt)

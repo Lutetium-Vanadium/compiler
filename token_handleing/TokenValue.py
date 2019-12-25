@@ -1,11 +1,12 @@
-from TokenTypes import TokenTypes
-from Types import Types
+from token_handleing.TokenTypes import TokenTypes
+from types.Types import Types
 
-class TokenValue():
+
+class TokenValue:
     def __init__(self, value, token_type):
         self.value = value
         self.type = self.getType(value)
-    
+
     def getType(self, value):
         if type(value) == int:
             return Types.Int
@@ -13,5 +14,5 @@ class TokenValue():
             return Types.Float
         if type(value) == bool:
             return Types.Bool
-        
+
         return Types.String
