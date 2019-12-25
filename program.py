@@ -47,10 +47,13 @@ while True:
         os.system(expression[1:])
         continue
 
-    variables, val = parser.parse(expression, variables, debug)
+    variables, val = parser.parse(expression, variables, False)
+
+    if debug:
+        val.prt()
 
     if errorBag.any():
         errorBag.prt()
         errorBag.clear()
     else:
-        print(val)
+        print(val.evaluate())

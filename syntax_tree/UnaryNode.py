@@ -1,7 +1,8 @@
 from token_handling.TokenTypes import *
+from syntax_tree.Node import Node
 
 
-class UnaryNode:
+class UnaryNode(Node):
     def __init__(self, child, operatorToken):
         self.child = child
         self.operatorToken = operatorToken
@@ -11,6 +12,9 @@ class UnaryNode:
 
     def __str__(self):
         return f"Child: {self.child}, OperatorToken: {self.operatorToken}"
+
+    def getChildren(self):
+        return self.child
 
 
 class UnaryOperatorNode(UnaryNode):

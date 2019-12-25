@@ -107,3 +107,36 @@ BOOLEAN_OPERATORS = (
     TokenTypes.LEOperator,
     TokenTypes.GEOperator,
 )
+
+
+def getUnaryPrecedence(token):
+    if token.isInstance(
+        TokenTypes.NotOperator, TokenTypes.PlusOperator, TokenTypes.MinusOperator
+    ):
+        return 8
+    return 0
+
+
+def getBinaryPrecedence(token):
+    if token.isInstance(TokenTypes.CarotOperator):
+        return 7
+    if token.isInstance(TokenTypes.ModOperator):
+        return 6
+    if token.isInstance(TokenTypes.SlashOperator, TokenTypes.StarOperator):
+        return 5
+    if token.isInstance(TokenTypes.PlusOperator, TokenTypes.MinusOperator):
+        return 4
+    if token.isInstance(
+        TokenTypes.NEOperator,
+        TokenTypes.EEOperator,
+        TokenTypes.LTOperator,
+        TokenTypes.GTOperator,
+        TokenTypes.LEOperator,
+        TokenTypes.GEOperator,
+    ):
+        return 3
+    if token.isInstance(TokenTypes.AndOperator):
+        return 2
+    if token.isInstance(TokenTypes.OrOperator):
+        return 1
+    return 0

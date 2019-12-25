@@ -1,7 +1,8 @@
 from token_handling.TokenTypes import *
+from syntax_tree.Node import Node
 
 
-class BinaryNode:
+class BinaryNode(Node):
     def __init__(self, child1, child2, operatorToken):
         self.left = child1
         self.right = child2

@@ -63,7 +63,7 @@ class Parser:
                 ):
                     i += 1
                 a = self.evaluateExpression(tokenList[start : i + 1], debug)
-                val = a.evaluate()
+                val = a
 
             i += 1
 
