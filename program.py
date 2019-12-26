@@ -64,6 +64,7 @@ while True:
         eval(expression[1:])
         continue
 
+    errorBag.addText(expression)
     variables, val = parser.parse(expression, variables)
 
     if debug:

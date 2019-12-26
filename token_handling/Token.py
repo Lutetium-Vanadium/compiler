@@ -1,11 +1,13 @@
+from textSpan import TextSpan
 from token_handling.TokenTypes import TokenTypes
 from token_handling.TokenValue import TokenValue
 
 
 class Token:
-    def __init__(self, value, token_type):
+    def __init__(self, value, token_type, start):
         self.token_type = token_type
         self.token_value = TokenValue(value, token_type)
+        self.text_span = TextSpan(start, len(str(value)))
 
     def __repr__(self):
         return f"Value: '{self.token_value.value}', Type: {self.token_type}"
