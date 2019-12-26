@@ -5,7 +5,7 @@ from syntax_tree.ExpressionNode import ExpressionNode
 from syntax_tree.UnaryNode import *
 from token_handling.Token import *
 from token_handling.TokenTypes import *
-from variables.Variable import Variable
+from variables.Variable import *
 
 
 class Parser:
@@ -25,10 +25,13 @@ class Parser:
         self.variables = variables
         self.index = 0
         lexer = Lexer(self.errorBag)
-        # TODO remove EOL_TOKEN at end, should be put manually when language is complete
-        self.tokenList = self.sanitize(lexer.lex(text)) + [EOL_TOKEN]
+        tokenList, errorBag = lexer.lex(text)
+        self.errorBag.extend(errorBag)
+        self.tokenList = self.sanitize(tokenList) + [EOF_TOKEN]
 
-        return self.variables, self.evaluate()
+        a = self.evaluate()
+
+        return self.variables, a
 
     def peek(self, offSet):
         return self.tokenList[self.index + offSet]
@@ -36,7 +39,17 @@ class Parser:
     def cur(self):
         return self.peek(0)
 
+    def match(self, expectedToken):
+        cur = self.cur()
+        if not cur.isInstance(expectedToken):
+            self.errorBag.tokenError(cur, expectedToken, cur.text_span)
+        self.index += 1
+        return cur
+
     def evaluate(self):
+        if self.cur().isInstance(TokenTypes.DeclarationKeyword):
+            return self.evaluateDeclareExpression()
+
         if self.cur().isInstance(TokenTypes.Variable) and self.peek(1).isInstance(
             TokenTypes.AssignmentOperator
         ):
@@ -44,11 +57,27 @@ class Parser:
 
         return self.evaluateBinaryExpression()
 
+    def evaluateDeclareExpression(self):
+        declarationToken = self.match(TokenTypes.DeclarationKeyword)
+
+        name = self.cur().token_value.value
+        data_type, isConst = getStatsFromDeclarationToken(declarationToken)
+        var = Variable(name, data_type=data_type, isConst=isConst)
+
+        self.variables[name] = var
+
+        return self.evaluateAssignmentExpression()
+
     def evaluateAssignmentExpression(self):
-        varNode = self.evaluateVariableExpression()
-        self.index += 1
+        varNode, variableExists = self.evaluateVariableExpression()
+        self.match(TokenTypes.AssignmentOperator)
+
         right = self.evaluate()
-        self.variables[varNode.value.name].value = right.evaluate()
+        if variableExists and not self.variables[varNode.value.name].trySetValue(
+            right.evaluate()
+        ):
+            self.errorBag.reassignConstError(varNode.value.name, varNode.text_span)
+
         return AssignmentNode(varNode, right, TokenTypes.AssignmentOperator)
 
     def evaluateBinaryExpression(self, parentPrecedence=0):
@@ -71,6 +100,15 @@ class Parser:
             right = self.evaluateBinaryExpression(precedence)
             left = BinaryOperatorNode(left, right, operatorToken)
 
+        if self.cur().isInstance(TokenTypes.PlusPlusOperator) and self.peek(
+            -1
+        ).isInstance(TokenTypes.Variable):
+            left.updateValue(+1)
+        elif self.cur().isInstance(TokenTypes.MinusMinusOperator) and self.peek(
+            -1
+        ).isInstance(TokenTypes.Variable):
+            left.updateValue(-1)
+
         return left
 
     def evaluatePrimaryExpression(self):
@@ -80,29 +118,25 @@ class Parser:
             return self.evaluateParanExpression()
 
         if cur.isInstance(TokenTypes.Variable):
-            return self.evaluateVariableExpression()
+            return self.evaluateVariableExpression()[0]
 
         if cur.isInstance(TokenTypes.Boolean, TokenTypes.Number):
-            return self.evaluateGeneralExpression()
+            return self.evaluateGeneralExpression(cur.token_type)
 
     def evaluateParanExpression(self):
-        self.index += 1
+        self.match(TokenTypes.OpenParan)
         expression = self.evaluate()
-        self.index += 1
+        self.match(TokenTypes.CloseParan)
         return expression
 
     def evaluateVariableExpression(self):
-        cur: Token = self.cur()
-        self.index += 1
+        cur = self.match(TokenTypes.Variable)
         name = cur.token_value.value
         var = self.variables.get(name)
         if not var:
-            var = Variable(name)
-            self.variables[name] = var
+            self.errorBag.nameError(name, cur.text_span)
+        return ExpressionNode(cur, var), var != None
 
-        return ExpressionNode(cur, var)
-
-    def evaluateGeneralExpression(self):
-        cur = self.cur()
-        self.index += 1
-        return ExpressionNode(cur, cur.token_value.value)
+    def evaluateGeneralExpression(self, token_type):
+        cur = self.match(token_type)
+        return ExpressionNode(cur)

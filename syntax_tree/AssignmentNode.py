@@ -17,4 +17,4 @@ class AssignmentNode(Node):
         return self.identifier, self.expression
 
     def evaluate(self):
-        return self.expression
+        return self.identifier.evaluate()

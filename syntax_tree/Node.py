@@ -1,4 +1,4 @@
-from printing.print_color import print_color, LIGHT_GRAY
+from printing.print_color import print_color, LIGHT_GRAY, BRIGHT_BLUE, BRIGHT_GREEN
 from token_handling.Token import Token
 
 
@@ -23,10 +23,10 @@ class Node:
         if len(node.getChildren()) == 0:
             hasChildren = False
             print_color(" ", fg=LIGHT_GRAY, end="")
-            print_color(node, fg=LIGHT_GRAY)
+            print_color(node, fg=BRIGHT_GREEN)
         else:
             hasChildren = True
-            print_color(node.operatorToken, fg=LIGHT_GRAY)
+            print_color(node.operatorToken, fg=BRIGHT_BLUE)
 
         indent += "   " if isLast else "│  "
 

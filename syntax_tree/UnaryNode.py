@@ -22,10 +22,16 @@ class UnaryOperatorNode(UnaryNode):
         super().__init__(child, operatorToken)
 
     def evaluate(self):
-        if self.operatorToken.token_type == TokenTypes.MinusOperator:
+        if self.operatorToken.isInstance(TokenTypes.MinusOperator):
             return -self.child.evaluate()
 
-        if self.operatorToken.token_type == TokenTypes.NotOperator:
+        if self.operatorToken.isInstance(TokenTypes.NotOperator):
             return not self.child.evaluate()
+
+        if self.operatorToken.isInstance(TokenTypes.PlusPlusOperator):
+            self.child.updateValue(1)
+
+        if self.operatorToken.isInstance(TokenTypes.MinusMinusOperator):
+            self.child.updateValue(-1)
 
         return self.child.evaluate()

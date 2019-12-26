@@ -29,7 +29,7 @@ while True:
     if bash:
         s = "$"
     elif debug:
-        s = "├>>"
+        s = "┌>>"
     else:
         s = ">>>"
     print(s, end=" ")
