@@ -7,7 +7,7 @@ from syntax_tree.UnaryNode import UnaryOperatorNode
 from error.ErrorBag import ErrorBag
 from token_handling.TokenTypes import TokenTypes
 from type_handling.Types import Types
-from type_handling.helperFunctions import getBinaryOperatorTypes
+from type_handling.helperFunctions import getBinaryOperatorTypes, getUnaryOperatorTypes
 
 from variables.Variable import getStatsFromDeclarationKeyword
 
@@ -45,7 +45,7 @@ class Binder:
         if isinstance(node, ExpressionNode):
             return self.bindExpressionNode(node)
 
-    def bindDeclarationExpression(self, node: DeclarationNode):
+    def bindDeclarationExpression(self, node):
         varType, isConst = getStatsFromDeclarationKeyword(node.declarationKeyword)
         varName = node.identifier.value
         varValue = self.bindExpression(node.expression)
@@ -63,7 +63,7 @@ class Binder:
             node.declarationKeyword, varType, varName, varValue, node.text_span
         )
 
-    def bindAssignmentExpression(self, node: AssignmentNode):
+    def bindAssignmentExpression(self, node):
         varName = node.identifier.value
         varValue = self.bindExpression(node.expression)
 
@@ -80,7 +80,7 @@ class Binder:
 
         return BoundAssignmentExpression(varType, varName, varValue, node.text_span)
 
-    def bindBinaryExpression(self, node: BinaryOperatorNode):
+    def bindBinaryExpression(self, node):
         left = self.bindExpression(node.left)
         operator = node.operatorToken
         right = self.bindExpression(node.right)
@@ -109,7 +109,7 @@ class Binder:
 
         return BoundBinaryExpression(resultType, left, operator, right, node.text_span)
 
-    def bindUnaryExpression(self, node: UnaryOperatorNode):
+    def bindUnaryExpression(self, node):
         operator = node.operatorToken
         operand = self.bindExpression(node.child)
         operandType, resultType = getUnaryOperatorTypes(operator)
@@ -126,9 +126,9 @@ class Binder:
         if operand.type != operandType:
             self.errorBag.typeError(operand.type, operandType, operand.text_span)
 
-        return BoundBinaryExpression(resultType, operator, operand, node.text_span)
+        return BoundUnaryExpression(resultType, operator, operand, node.text_span)
 
-    def bindExpressionNode(self, node: ExpressionNode):
+    def bindExpressionNode(self, node):
         if node.isInstance(TokenTypes.Variable):
             success, var = self.scope.tryGetVariable(node.value)
             if not success:

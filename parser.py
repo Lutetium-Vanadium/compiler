@@ -6,7 +6,6 @@ from syntax_tree.ExpressionNode import ExpressionNode
 from syntax_tree.UnaryNode import *
 from token_handling.Token import *
 from token_handling.TokenTypes import *
-from variables.Variable import *
 
 
 class Parser:
@@ -29,7 +28,7 @@ class Parser:
         tokenList, self.errorBag = lexer.lex(text)
         self.tokenList = self.sanitize(tokenList) + [EOF_TOKEN]
 
-        return self.evaluate(), self.errorBag
+        return self._parse(), self.errorBag
 
     def peek(self, offSet):
         return self.tokenList[self.index + offSet]
@@ -37,45 +36,54 @@ class Parser:
     def cur(self):
         return self.peek(0)
 
-    def match(self, expectedToken):
+    def match(self, *expectedTokens):
         cur = self.cur()
-        if not cur.isInstance(expectedToken):
-            self.errorBag.tokenError(cur, expectedToken, cur.text_span)
+        if not cur.isInstance(*expectedTokens):
+            self.errorBag.tokenError(cur, expectedTokens, cur.text_span)
         self.index += 1
         return cur
 
-    def evaluate(self):
+    def _parse(self):
         if self.cur().isInstance(TokenTypes.DeclarationKeyword):
-            return self.evaluateDeclareExpression()
+            return self.parseDeclareExpression()
 
-        if self.cur().isInstance(TokenTypes.Variable) and self.peek(1).isInstance(
-            TokenTypes.AssignmentOperator
-        ):
-            return self.evaluateAssignmentExpression()
+        if self.cur().isInstance(TokenTypes.Variable):
+            if self.peek(1).isInstance(TokenTypes.AssignmentOperator):
+                return self.parseAssignmentExpression()
+            elif self.peek(1).isInstance(*CALC_ASSIGN_OPERATORS) and self.peek(2).isInstance(TokenTypes.AssignmentOperator):
+                return self.parseCalculateAssignmentExpression()
 
-        return self.evaluateBinaryExpression()
+        return self.parseBinaryExpression()
 
-    def evaluateDeclareExpression(self):
+    def parseDeclareExpression(self):
         declarationToken = self.match(TokenTypes.DeclarationKeyword)
-        return DeclarationNode(declarationToken, self.evaluateAssignmentExpression())
+        return DeclarationNode(declarationToken, self.parseAssignmentExpression())
 
-    def evaluateAssignmentExpression(self):
-        varNode = self.evaluateGeneralExpression(TokenTypes.Variable)
+    def parseAssignmentExpression(self):
+        varNode = self.parseGeneralExpression(TokenTypes.Variable)
         self.match(TokenTypes.AssignmentOperator)
 
-        right = self.evaluate()
+        right = self._parse()
 
         return AssignmentNode(varNode, right, TokenTypes.AssignmentOperator)
+    
+    def parseCalculateAssignmentExpression(self):
+        varNode = self.parseGeneralExpression(TokenTypes.Variable)
+        operator = self.match(*CALC_ASSIGN_OPERATORS)
+        assignment_operator = self.match(TokenTypes.AssignmentOperator)
+        right = self._parse()
+        newVal = BinaryOperatorNode(varNode, right, operator)
+        return AssignmentNode(varNode, newVal, assignment_operator)
 
-    def evaluateBinaryExpression(self, parentPrecedence=0):
+    def parseBinaryExpression(self, parentPrecedence=0):
         unaryPrecedence = getUnaryPrecedence(self.cur())
         if unaryPrecedence != 0 and unaryPrecedence >= parentPrecedence:
             operator = self.cur()
             self.index += 1
-            operand = self.evaluateBinaryExpression(unaryPrecedence)
+            operand = self.parseBinaryExpression(unaryPrecedence)
             left = UnaryOperatorNode(operand, operator)
         else:
-            left = self.evaluatePrimaryExpression()
+            left = self.parsePrimaryExpression()
 
         while True:
             precedence = getBinaryPrecedence(self.cur())
@@ -84,7 +92,7 @@ class Parser:
 
             operatorToken = self.cur()
             self.index += 1
-            right = self.evaluateBinaryExpression(precedence)
+            right = self.parseBinaryExpression(precedence)
             left = BinaryOperatorNode(left, right, operatorToken)
 
         if self.cur().isInstance(TokenTypes.PlusPlusOperator) and self.peek(
@@ -98,21 +106,21 @@ class Parser:
 
         return left
 
-    def evaluatePrimaryExpression(self):
+    def parsePrimaryExpression(self):
         cur = self.cur()
 
         if cur.isInstance(TokenTypes.OpenParan):
-            return self.evaluateParanExpression()
+            return self.parseParanExpression()
 
         if cur.isInstance(TokenTypes.Boolean, TokenTypes.Number, TokenTypes.Variable):
-            return self.evaluateGeneralExpression(cur.token_type)
+            return self.parseGeneralExpression(cur.token_type)
 
-    def evaluateParanExpression(self):
+    def parseParanExpression(self):
         self.match(TokenTypes.OpenParan)
-        expression = self.evaluate()
+        expression = self._parse()
         self.match(TokenTypes.CloseParan)
         return expression
 
-    def evaluateGeneralExpression(self, token_type):
+    def parseGeneralExpression(self, token_type):
         cur = self.match(token_type)
         return ExpressionNode(cur)

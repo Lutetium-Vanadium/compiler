@@ -1,4 +1,5 @@
 from variables.Variable import Variable
+from binder.BoundLiteralExpression import BoundLiteralExpression
 
 
 class Scope:
@@ -27,5 +28,7 @@ class Scope:
 
         return self.parentScope.tryGetVariable(varName)
 
-    def updateValue(self, varName, newValue):
-        self.variables[varName].trySetValue(newValue)
+    def updateValue(self, varName, newValue, textSpan):
+        var = self.variables[varName]
+        newNode = BoundLiteralExpression(var.type, newValue, textSpan)
+        self.variables[varName].trySetValue(newNode)

@@ -32,7 +32,7 @@ def getBinaryOperatorTypes(operator):
 
 
 def getUnaryOperatorTypes(operator):
-    if self.operatorToken.isInstance(
+    if operator.isInstance(
         TokenTypes.MinusOperator,
         TokenTypes.PlusOperator,
         TokenTypes.PlusPlusOperator,
@@ -40,5 +40,5 @@ def getUnaryOperatorTypes(operator):
     ):
         return Types.Int, Types.Int
 
-    if self.operatorToken.isInstance(TokenTypes.NotOperator):
+    if operator.isInstance(TokenTypes.NotOperator):
         return Types.Bool, Types.Bool

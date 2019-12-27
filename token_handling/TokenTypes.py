@@ -23,29 +23,31 @@ class TokenTypes(Enum):
     Text = auto()
 
     # Operators
-    PlusOperator = auto()  #        +
-    MinusOperator = auto()  #       -
-    StarOperator = auto()  #        *
-    SlashOperator = auto()  #       /
-    ModOperator = auto()  #         %
-    CaretOperator = auto()  #       ^
-    PlusPlusOperator = auto()  #    ++
-    MinusMinusOperator = auto()  #   --
+    PlusOperator = auto()  #            +
+    MinusOperator = auto()  #           -
+    StarOperator = auto()  #            *
+    SlashOperator = auto()  #           /
+    ModOperator = auto()  #             %
+    CaretOperator = auto()  #           ^
+    PlusPlusOperator = auto()  #        ++
+    MinusMinusOperator = auto()  #      --
+    AssignmentOperator = auto()  #      =
 
     # Boolean Operators
-    OrOperator = auto()  #          ||
-    AndOperator = auto()  #         &&
-    NotOperator = auto()  #         !
-    NEOperator = auto()  #          !=
-    EEOperator = auto()  #          ==
-    LTOperator = auto()  #          <
-    GTOperator = auto()  #          >
-    LEOperator = auto()  #          <=
-    GEOperator = auto()  #          >=
+    OrOperator = auto()  #              ||
+    AndOperator = auto()  #             &&
+    NotOperator = auto()  #             !
+    NEOperator = auto()  #              !=
+    EEOperator = auto()  #              ==
+    LTOperator = auto()  #              <
+    GTOperator = auto()  #              >
+    LEOperator = auto()  #              <=
+    GEOperator = auto()  #              >=
 
-    AssignmentOperator = auto()  #  =
-    OpenParan = auto()  #           (
-    CloseParan = auto()  #          )
+    OpenParan = auto()  #               (
+    CloseParan = auto()  #              )
+    OpenBrace = auto()  #               {
+    CloseBrace = auto()  #              }
 
     # Unknown
     Bad = auto()
@@ -74,25 +76,14 @@ OPERATOR_TYPES = (
     TokenTypes.AssignmentOperator,
 )
 
-ARITHMETIC_OPERATORS = (
+CALC_ASSIGN_OPERATORS = (
     TokenTypes.PlusOperator,
     TokenTypes.MinusOperator,
     TokenTypes.StarOperator,
     TokenTypes.SlashOperator,
     TokenTypes.ModOperator,
-    TokenTypes.CaretOperator,
-)
-
-BOOLEAN_OPERATORS = (
     TokenTypes.OrOperator,
     TokenTypes.AndOperator,
-    TokenTypes.NotOperator,
-    TokenTypes.NEOperator,
-    TokenTypes.EEOperator,
-    TokenTypes.LTOperator,
-    TokenTypes.GTOperator,
-    TokenTypes.LEOperator,
-    TokenTypes.GEOperator,
 )
 
 

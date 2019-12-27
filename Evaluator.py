@@ -37,7 +37,10 @@ class Evaluator:
             return self.evaluateDeclarationExpression(node)
 
     def evaluateAssignmentExpression(self, node):
-        return node.varValue
+        self.scope.updateValue(
+            node.varName, self.evaluateNode(node.varValue), node.varValue.text_span
+        )
+        return self.scope.tryGetVariable(node.varName)[1]
 
     def evaluateBinaryExpression(self, node):
         # Arithmetic Operators
@@ -75,7 +78,15 @@ class Evaluator:
             return self.evaluateNode(node.left) < self.evaluateNode(node.right)
 
     def evaluateDeclarationExpression(self, node):
-        return node.varValue
+        # For Declaration, value need not be updated as the binder initiates with the value
+        # the variable gets.
+        # For Assignment, the value cannot be updated in the binder.
+        #
+        # eg: a = a + 2
+        # When evaluating, 'a' has a value of 'a + 2' if the value is updated in the binder,
+        # which leads to an infinite loop as 'a' keeps trying to find the value of 'a'.
+
+        return self.scope.tryGetVariable(node.varName)[1]
 
     def evaluateLiteralExpression(self, node):
         return node.value
@@ -97,12 +108,16 @@ class Evaluator:
 
         if node.operator.isInstance(TokenTypes.PlusPlusOperator):
             self.scope.updateValue(
-                node.operand.var.name, self.evaluateNode(node.operand) + 1
+                node.operand.var.name,
+                self.evaluateNode(node.operand) + 1,
+                node.operand.text_span,
             )
 
         if node.operator.isInstance(TokenTypes.MinusMinusOperator):
             self.child.updateValue(
-                node.operand.var.name, self.evaluateNode(node.operand) - 1
+                node.operand.var.name,
+                self.evaluateNode(node.operand) - 1,
+                node.operand.text_span,
             )
 
         return self.evaluateNode(node.operand)
