@@ -1,7 +1,5 @@
 #!/usr/bin/python3
-import os
-import sys
-
+import os, sys
 from error.ErrorBag import ErrorBag
 from Evaluator import Evaluator
 from parser import Parser
