@@ -5,15 +5,14 @@ from binder.BoundLiteralExpression import BoundLiteralExpression
 from binder.BoundVariableExpression import BoundVariableExpression
 from binder.BoundUnaryExpression import BoundUnaryExpression
 
-from variables.VariableBag import VariableBag
 from token_handling.TokenTypes import TokenTypes
 from type_handling.Types import Types
 
 
 class Evaluator:
-    def __init__(self, syntaxTree, variables: VariableBag):
+    def __init__(self, syntaxTree, scope):
         self.syntaxTree = syntaxTree
-        self.variables = variables
+        self.scope = scope
 
     def evaluate(self):
         return self.evaluateNode(self.syntaxTree)
@@ -37,10 +36,10 @@ class Evaluator:
         if isinstance(node, BoundDeclarationExpression):
             return self.evaluateDeclarationExpression(node)
 
-    def evaluateAssignmentExpression(self, node: BoundAssignmentExpression):
+    def evaluateAssignmentExpression(self, node):
         return node.varValue
 
-    def evaluateBinaryExpression(self, node: BoundBinaryExpression):
+    def evaluateBinaryExpression(self, node):
         # Arithmetic Operators
         if node.operator.isInstance(TokenTypes.PlusOperator):
             return self.evaluateNode(node.left) + self.evaluateNode(node.right)
@@ -75,21 +74,21 @@ class Evaluator:
         if node.operator.isInstance(TokenTypes.LTOperator):
             return self.evaluateNode(node.left) < self.evaluateNode(node.right)
 
-    def evaluateDeclarationExpression(self, node: BoundDeclarationExpression):
+    def evaluateDeclarationExpression(self, node):
         return node.varValue
 
-    def evaluateLiteralExpression(self, node: BoundLiteralExpression):
+    def evaluateLiteralExpression(self, node):
         return node.value
 
-    def evaluateVariableExpression(self, node: BoundVariableExpression):
-        success, var = self.variables.tryGetVariable(node.var.name)
+    def evaluateVariableExpression(self, node):
+        success, var = self.scope.tryGetVariable(node.var.name)
         if success:
             return self.evaluateNode(var.value)
 
         # All non declared variables should be taken care of in the binder
         raise NameError(f"Variable {node.var.name} doesn't exist.")
 
-    def evaluateUnaryExpression(self, node: BoundUnaryExpression):
+    def evaluateUnaryExpression(self, node):
         if node.operator.isInstance(TokenTypes.MinusOperator):
             return -(self.evaluateNode(node.operand))
 
@@ -97,7 +96,7 @@ class Evaluator:
             return not (self.evaluateNode(node.operand))
 
         if node.operator.isInstance(TokenTypes.PlusPlusOperator):
-            self.variables.updateValue(
+            self.scope.updateValue(
                 node.operand.var.name, self.evaluateNode(node.operand) + 1
             )
 

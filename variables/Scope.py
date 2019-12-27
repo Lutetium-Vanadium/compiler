@@ -1,10 +1,11 @@
 from variables.Variable import Variable
-from error.ErrorBag import ErrorBag
 
 
-class VariableBag:
-    def __init__(self):
+class Scope:
+    def __init__(self, parentScope=None):
+        self.parentScope = parentScope
         self.variables = {}
+        self.isGlobalScope = parentScope == None
 
     def tryInitialiseVariable(self, varName, varValue, varType, isConst):
         var = Variable(varName, varType, varValue, isConst)
@@ -20,7 +21,11 @@ class VariableBag:
 
         if variable:
             return True, variable
-        return False, None
+
+        if self.isGlobalScope:
+            return False, None
+
+        return self.parentScope.tryGetVariable(varName)
 
     def updateValue(self, varName, newValue):
         self.variables[varName].trySetValue(newValue)

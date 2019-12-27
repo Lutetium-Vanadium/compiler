@@ -10,7 +10,6 @@ from type_handling.Types import Types
 from type_handling.helperFunctions import getBinaryOperatorTypes
 
 from variables.Variable import getStatsFromDeclarationKeyword
-from variables.VariableBag import VariableBag
 
 from binder.BoundAssignmentExpression import BoundAssignmentExpression
 from binder.BoundBinaryExpression import BoundBinaryExpression
@@ -21,14 +20,14 @@ from binder.BoundUnaryExpression import BoundUnaryExpression
 
 
 class Binder:
-    def __init__(self, root, errorBag, variables):
+    def __init__(self, root, errorBag, scope):
         self.root = root
         self.index = 0
-        self.variables = variables
+        self.scope = scope
         self.errorBag = errorBag
 
     def bind(self):
-        return self.bindExpression(self.root), self.variables, self.errorBag
+        return self.bindExpression(self.root), self.scope, self.errorBag
 
     def bindExpression(self, node):
         if isinstance(node, DeclarationNode):
@@ -57,9 +56,7 @@ class Binder:
                 varValue.type, varType, varValue.text_span
             )
 
-        if not self.variables.tryInitialiseVariable(
-            varName, varValue, varType, isConst
-        ):
+        if not self.scope.tryInitialiseVariable(varName, varValue, varType, isConst):
             self.errorBag.initialiseError(varName, node.identifier.text_span)
 
         return BoundDeclarationExpression(
@@ -70,7 +67,7 @@ class Binder:
         varName = node.identifier.value
         varValue = self.bindExpression(node.expression)
 
-        success, var = self.variables.tryGetVariable(varName)
+        success, var = self.scope.tryGetVariable(varName)
         if not success:
             self.errorBag.nameError(varName, node.identifier.text_span)
             varType = None
@@ -133,7 +130,7 @@ class Binder:
 
     def bindExpressionNode(self, node: ExpressionNode):
         if node.isInstance(TokenTypes.Variable):
-            success, var = self.variables.tryGetVariable(node.value)
+            success, var = self.scope.tryGetVariable(node.value)
             if not success:
                 self.errorBag.nameError(node.value, node.text_span)
                 return BoundLiteralExpression(Types.Unknown, node.value, node.text_span)

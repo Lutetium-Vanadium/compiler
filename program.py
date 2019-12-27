@@ -6,7 +6,8 @@ from error.ErrorBag import ErrorBag
 from Evaluator import Evaluator
 from parser import Parser
 from binder.Binder import Binder
-from variables.VariableBag import VariableBag
+
+from variables.Scope import Scope
 
 if len(sys.argv) > 1:
     debug = sys.argv[1] == "true"
@@ -18,15 +19,7 @@ errorBag = ErrorBag()
 parser = Parser(errorBag)
 
 bash = False
-variables = VariableBag()
-
-
-def dump(dct=variables, indent=2):
-    print("{")
-    for k, v in dct.items():
-        print(" " * indent + "|" + str(k) + "|:::::   |" + str(v) + "|,")
-    print("}")
-
+globalScope = Scope()
 
 while True:
     if bash:
@@ -69,8 +62,8 @@ while True:
 
     errorBag.addText(expression)
     rootNode, errorBag = parser.parse(expression, errorBag)
-    binder = Binder(rootNode, errorBag, variables)
-    boundTree, variables, errorBag = binder.bind()
+    binder = Binder(rootNode, errorBag, globalScope)
+    boundTree, globalScope, errorBag = binder.bind()
 
     if debug:
         rootNode.prt()
@@ -79,5 +72,5 @@ while True:
         errorBag.prt()
         errorBag.clear()
     else:
-        evaluator = Evaluator(boundTree, variables)
+        evaluator = Evaluator(boundTree, globalScope)
         print(evaluator.evaluate())
