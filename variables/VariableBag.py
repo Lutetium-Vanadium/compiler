@@ -21,3 +21,6 @@ class VariableBag:
         if variable:
             return True, variable
         return False, None
+
+    def updateValue(self, varName, newValue):
+        self.variables[varName].trySetValue(newValue)

@@ -5,6 +5,8 @@ import sys
 from error.ErrorBag import ErrorBag
 from Evaluator import Evaluator
 from parser import Parser
+from binder.Binder import Binder
+from variables.VariableBag import VariableBag
 
 if len(sys.argv) > 1:
     debug = sys.argv[1] == "true"
@@ -14,11 +16,9 @@ else:
 errorBag = ErrorBag()
 
 parser = Parser(errorBag)
-evaluator = Evaluator()
 
 bash = False
-
-variables = {}
+variables = VariableBag()
 
 
 def dump(dct=variables, indent=2):
@@ -68,13 +68,16 @@ while True:
         continue
 
     errorBag.addText(expression)
-    variables, val = parser.parse(expression, variables)
+    rootNode, errorBag = parser.parse(expression, errorBag)
+    binder = Binder(rootNode, errorBag, variables)
+    boundTree, variables, errorBag = binder.bind()
 
     if debug:
-        val.prt()
+        rootNode.prt()
 
     if errorBag.any():
         errorBag.prt()
         errorBag.clear()
     else:
-        print(evaluator.evaluate(val))
+        evaluator = Evaluator(boundTree, variables)
+        print(evaluator.evaluate())

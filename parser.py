@@ -21,18 +21,15 @@ class Parser:
                 tokenList.pop(i)
         return tokenList
 
-    def parse(self, text, variables):
+    def parse(self, text, errorBag):
+        self.errorBag = errorBag
         self.text = text
-        self.variables = variables
         self.index = 0
         lexer = Lexer(self.errorBag)
-        tokenList, errorBag = lexer.lex(text)
-        self.errorBag.extend(errorBag)
+        tokenList, self.errorBag = lexer.lex(text)
         self.tokenList = self.sanitize(tokenList) + [EOF_TOKEN]
 
-        a = self.evaluate()
-
-        return self.variables, a
+        return self.evaluate(), self.errorBag
 
     def peek(self, offSet):
         return self.tokenList[self.index + offSet]
@@ -60,26 +57,13 @@ class Parser:
 
     def evaluateDeclareExpression(self):
         declarationToken = self.match(TokenTypes.DeclarationKeyword)
-        declarationKeyword = declarationToken.token_value.value
-        name = self.cur().token_value.value
-        data_type, isConst = getStatsFromDeclarationKeyword(declarationKeyword)
-        var = Variable(name, data_type=data_type, isConst=isConst)
-
-        self.variables[name] = var
-
-        return DeclarationNode.fromAssignment(
-            declarationKeyword, self.evaluateAssignmentExpression()
-        )
+        return DeclarationNode(declarationToken, self.evaluateAssignmentExpression())
 
     def evaluateAssignmentExpression(self):
-        varNode, variableExists = self.evaluateVariableExpression()
+        varNode = self.evaluateGeneralExpression(TokenTypes.Variable)
         self.match(TokenTypes.AssignmentOperator)
 
         right = self.evaluate()
-        if variableExists and not self.variables[varNode.value.name].trySetValue(
-            right.evaluate()
-        ):
-            self.errorBag.reassignConstError(varNode.value.name, varNode.text_span)
 
         return AssignmentNode(varNode, right, TokenTypes.AssignmentOperator)
 
@@ -120,10 +104,7 @@ class Parser:
         if cur.isInstance(TokenTypes.OpenParan):
             return self.evaluateParanExpression()
 
-        if cur.isInstance(TokenTypes.Variable):
-            return self.evaluateVariableExpression()[0]
-
-        if cur.isInstance(TokenTypes.Boolean, TokenTypes.Number):
+        if cur.isInstance(TokenTypes.Boolean, TokenTypes.Number, TokenTypes.Variable):
             return self.evaluateGeneralExpression(cur.token_type)
 
     def evaluateParanExpression(self):
@@ -131,14 +112,6 @@ class Parser:
         expression = self.evaluate()
         self.match(TokenTypes.CloseParan)
         return expression
-
-    def evaluateVariableExpression(self):
-        cur = self.match(TokenTypes.Variable)
-        name = cur.token_value.value
-        var = self.variables.get(name)
-        if not var:
-            self.errorBag.nameError(name, cur.text_span)
-        return ExpressionNode(cur, var), var != None
 
     def evaluateGeneralExpression(self, token_type):
         cur = self.match(token_type)

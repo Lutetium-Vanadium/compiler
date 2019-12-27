@@ -55,7 +55,7 @@ class ErrorBag:
     def typeError(self, typeGotten, expectedType, text_span):
         self.report(
             Error(
-                f"TypeError: Expected type {expectedType}, got type {typeGotten}",
+                f"TypeError: Expected type <{expectedType}>, got type <{typeGotten}>",
                 text_span,
             )
         )

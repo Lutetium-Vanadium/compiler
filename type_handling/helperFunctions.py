@@ -1,9 +1,10 @@
 from token_handling.TokenTypes import TokenTypes
+from type_handling.Types import Types
 
 
 def getBinaryOperatorTypes(operator):
     # Arithmetic Operators
-    if self.operatorToken.isInstance(
+    if operator.isInstance(
         TokenTypes.PlusOperator,
         TokenTypes.MinusOperator,
         TokenTypes.StarOperator,
@@ -11,13 +12,13 @@ def getBinaryOperatorTypes(operator):
         TokenTypes.ModOperator,
         TokenTypes.CaretOperator,
     ):
-        return int, int
+        return Types.Int, Types.Int
 
     # Boolean Operators
-    if self.operatorToken.isInstance(TokenTypes.OrOperator, TokenTypes.AndOperator):
-        return bool, bool
+    if operator.isInstance(TokenTypes.OrOperator, TokenTypes.AndOperator):
+        return Types.Bool, Types.Bool
 
-    if self.operatorToken.isInstance(
+    if operator.isInstance(
         TokenTypes.NEOperator,
         TokenTypes.EEOperator,
         TokenTypes.GEOperator,
@@ -25,6 +26,19 @@ def getBinaryOperatorTypes(operator):
         TokenTypes.LEOperator,
         TokenTypes.LTOperator,
     ):
-        return int, bool
+        return Types.Int, Types.Bool
 
     raise EnvironmentError("Python is dying")
+
+
+def getUnaryOperatorTypes(operator):
+    if self.operatorToken.isInstance(
+        TokenTypes.MinusOperator,
+        TokenTypes.PlusOperator,
+        TokenTypes.PlusPlusOperator,
+        TokenTypes.MinusMinusOperator,
+    ):
+        return Types.Int, Types.Int
+
+    if self.operatorToken.isInstance(TokenTypes.NotOperator):
+        return Types.Bool, Types.Bool

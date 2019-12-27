@@ -4,9 +4,9 @@ from textSpan import TextSpan
 
 
 class BinaryNode(Node):
-    def __init__(self, child1, child2, operatorToken):
-        self.left = child1
-        self.right = child2
+    def __init__(self, left, right, operatorToken):
+        self.left = left
+        self.right = right
         self.operatorToken = operatorToken
         start = left.text_span.start
         end = right.text_span.end
@@ -23,8 +23,8 @@ class BinaryNode(Node):
 
 
 class BinaryOperatorNode(BinaryNode):
-    def __init__(self, child1, child2, operatorToken):
-        super().__init__(child1, child2, operatorToken)
+    def __init__(self, left, right, operatorToken):
+        super().__init__(left, right, operatorToken)
 
     def evaluate(self):
         # Arithmetic Operators

@@ -90,9 +90,10 @@ class Lexer:
 
     def lexNumber(self):
         num, start = self.get_same_block(TokenTypes.Number)
-        num = float(num)
-        if num.is_integer():
+        if num.find(".") == -1:
             num = int(num)
+        else:
+            num = float(num)
         self.appendToken(num, TokenTypes.Number, start)
 
     def lexOperator(self):

@@ -7,6 +7,7 @@ from syntax_tree.UnaryNode import UnaryOperatorNode
 from error.ErrorBag import ErrorBag
 from token_handling.TokenTypes import TokenTypes
 from type_handling.Types import Types
+from type_handling.helperFunctions import getBinaryOperatorTypes
 
 from variables.Variable import getStatsFromDeclarationKeyword
 from variables.VariableBag import VariableBag
@@ -20,11 +21,14 @@ from binder.BoundUnaryExpression import BoundUnaryExpression
 
 
 class Binder:
-    def __init__(self, rootNode, errorBag):
-        self.root = rootNode
+    def __init__(self, root, errorBag, variables):
+        self.root = root
         self.index = 0
-        self.variables = VariableBag()
-        self.errorBag = ErrorBag(errorBag)
+        self.variables = variables
+        self.errorBag = errorBag
+
+    def bind(self):
+        return self.bindExpression(self.root), self.variables, self.errorBag
 
     def bindExpression(self, node):
         if isinstance(node, DeclarationNode):
@@ -40,12 +44,12 @@ class Binder:
             return self.bindUnaryExpression(node)
 
         if isinstance(node, ExpressionNode):
-            self.bindExpressionNode(node)
+            return self.bindExpressionNode(node)
 
     def bindDeclarationExpression(self, node: DeclarationNode):
         varType, isConst = getStatsFromDeclarationKeyword(node.declarationKeyword)
-        varName = node.identifier
-        varValue = bindExpression(node.expression)
+        varName = node.identifier.value
+        varValue = self.bindExpression(node.expression)
         if varType == None:
             varType = varValue.type
         if varType != varValue.type:
@@ -56,21 +60,28 @@ class Binder:
         if not self.variables.tryInitialiseVariable(
             varName, varValue, varType, isConst
         ):
-            errorBag.initialiseError(varName, varName.text_span)
+            self.errorBag.initialiseError(varName, node.identifier.text_span)
 
         return BoundDeclarationExpression(
             node.declarationKeyword, varType, varName, varValue, node.text_span
         )
 
     def bindAssignmentExpression(self, node: AssignmentNode):
-        varName = node.identifier
-        varValue = bindExpression(node.expression)
+        varName = node.identifier.value
+        varValue = self.bindExpression(node.expression)
 
         success, var = self.variables.tryGetVariable(varName)
         if not success:
-            errorBag.nameError(varName, text_span)
+            self.errorBag.nameError(varName, node.identifier.text_span)
+            varType = None
+        else:
+            if var.isConst:
+                self.errorBag.reassignConstError(varName, node.identifier.text_span)
+            if var.type != varValue.type:
+                self.errorBag.typeError(varValue.type, var.type, varValue.text_span)
+            varType = var.type
 
-        return BoundAssignmentExpression(varType, varName, varValue)
+        return BoundAssignmentExpression(varType, varName, varValue, node.text_span)
 
     def bindBinaryExpression(self, node: BinaryOperatorNode):
         left = self.bindExpression(node.left)
@@ -78,18 +89,42 @@ class Binder:
         right = self.bindExpression(node.right)
         operandType, resultType = getBinaryOperatorTypes(operator)
 
-        if left.type != operandType:
+        if operandType == Types.Int and (
+            left.type == Types.Float or right.type == Types.Float
+        ):
+            if resultType == Types.Int:
+                resultType = Types.Float
+            operandType = Types.Float
+
+        if (
+            left.type != operandType
+            and operandType == Types.Float
+            and left.type != Types.Int
+        ):
             self.errorBag.typeError(left.type, operandType, left.text_span)
 
-        if right.type != operandType:
+        if (
+            right.type != operandType
+            and operandType == Types.Float
+            and right.type != Types.Int
+        ):
             self.errorBag.typeError(right.type, operandType, right.text_span)
 
         return BoundBinaryExpression(resultType, left, operator, right, node.text_span)
 
-    def bindBinaryExpression(self, node: UnaryOperatorNode):
+    def bindUnaryExpression(self, node: UnaryOperatorNode):
         operator = node.operatorToken
         operand = self.bindExpression(node.child)
-        operandType, resultType = getBinaryOperatorTypes(operator)
+        operandType, resultType = getUnaryOperatorTypes(operator)
+
+        if operator.isInstance(
+            TokenTypes.PlusPlusOperator, TokenTypes.MinusMinusOperator
+        ) and not isinstance(operand, BoundVariableExpression):
+            self.errorBag.syntaxError(
+                operand.getName(),
+                operand.text_span,
+                f"Unary Operator {operator.token_type} requires a variable as operand",
+            )
 
         if operand.type != operandType:
             self.errorBag.typeError(operand.type, operandType, operand.text_span)
@@ -100,7 +135,7 @@ class Binder:
         if node.isInstance(TokenTypes.Variable):
             success, var = self.variables.tryGetVariable(node.value)
             if not success:
-                errorBag.nameError(node.value, node.text_span)
+                self.errorBag.nameError(node.value, node.text_span)
                 return BoundLiteralExpression(Types.Unknown, node.value, node.text_span)
 
             return BoundVariableExpression(var, node.text_span)
