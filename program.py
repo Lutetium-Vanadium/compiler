@@ -1,8 +1,10 @@
 #!/usr/bin/python3
 import os
 import sys
-from parser import Parser
+
 from error.ErrorBag import ErrorBag
+from Evaluator import Evaluator
+from parser import Parser
 
 if len(sys.argv) > 1:
     debug = sys.argv[1] == "true"
@@ -12,6 +14,7 @@ else:
 errorBag = ErrorBag()
 
 parser = Parser(errorBag)
+evaluator = Evaluator()
 
 bash = False
 
@@ -74,4 +77,4 @@ while True:
         errorBag.prt()
         errorBag.clear()
     else:
-        print(val.evaluate())
+        print(evaluator.evaluate(val))

@@ -28,7 +28,7 @@ class TokenTypes(Enum):
     StarOperator = auto()  #        *
     SlashOperator = auto()  #       /
     ModOperator = auto()  #         %
-    CarotOperator = auto()  #       ^
+    CaretOperator = auto()  #       ^
     PlusPlusOperator = auto()  #    ++
     MinusMinusOperator = auto()  #   --
 
@@ -57,7 +57,7 @@ OPERATOR_TYPES = (
     TokenTypes.StarOperator,
     TokenTypes.SlashOperator,
     TokenTypes.ModOperator,
-    TokenTypes.CarotOperator,
+    TokenTypes.CaretOperator,
     TokenTypes.PlusPlusOperator,
     TokenTypes.MinusMinusOperator,
     TokenTypes.OpenParan,
@@ -80,7 +80,7 @@ ARITHMETIC_OPERATORS = (
     TokenTypes.StarOperator,
     TokenTypes.SlashOperator,
     TokenTypes.ModOperator,
-    TokenTypes.CarotOperator,
+    TokenTypes.CaretOperator,
 )
 
 BOOLEAN_OPERATORS = (
@@ -109,7 +109,7 @@ def getUnaryPrecedence(token):
 
 
 def getBinaryPrecedence(token):
-    if token.isInstance(TokenTypes.CarotOperator):
+    if token.isInstance(TokenTypes.CaretOperator):
         return 7
     if token.isInstance(TokenTypes.ModOperator):
         return 6

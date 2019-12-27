@@ -27,7 +27,7 @@ class Lexer:
             return TokenTypes.Text
 
         if char in OPERATORS:
-            # A generalised operator type, will be seperated out to the various operators later
+            # A generalized operator type, will be seperated out to the various operators later
             return TokenTypes.Operator
 
         if char.isdigit() or char == ".":
@@ -123,7 +123,7 @@ class Lexer:
         elif cur == "%":
             self.appendToken("%", TokenTypes.ModOperator, start)
         elif cur == "^":
-            self.appendToken("^", TokenTypes.CarotOperator, start)
+            self.appendToken("^", TokenTypes.CaretOperator, start)
         elif cur == "(":
             self.appendToken("(", TokenTypes.OpenParan, start)
         elif cur == ")":

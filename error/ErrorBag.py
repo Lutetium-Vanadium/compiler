@@ -41,7 +41,15 @@ class ErrorBag:
 
     def badCharError(self, char, text_span):
         self.report(
-            Error(f"BadCharacterError: Unrecognised character {char}", text_span)
+            Error(f"BadCharacterError: Unrecognized character '{char}'", text_span)
+        )
+
+    def tokenError(self, tokenGotten, expectedToken, text_span):
+        self.report(
+            Error(
+                f"TokenError: Expected token <{expectedToken}>, got <{tokenGotten}>",
+                text_span,
+            )
         )
 
     def typeError(self, typeGotten, expectedType, text_span):
@@ -52,20 +60,33 @@ class ErrorBag:
             )
         )
 
+    def assignmentTypeError(self, typeGotten, expectedType, text_span):
+        self.report(
+            Error(
+                f"TypeError: '{typeGotten}' cannot be assigned to variable of type '{typeGotten}'",
+                text_span,
+            )
+        )
+
     def syntaxError(self, text, text_span, reason=""):
         if len(reason) > 0:
             reason = "\n  - " + reason
         self.report(
-            Error(f"SyntaxError: {text} is syntactically incorrect{reason}", text_span)
+            Error(
+                f"SyntaxError: `{text}` is syntactically incorrect{reason}", text_span
+            )
         )
 
     def nameError(self, name, text_span):
-        self.report(Error(f"NameError: {name} is not a variable", text_span))
+        self.report(Error(f"NameError: '{name}' is not a variable", text_span))
+
+    def initialiseError(self, name, text_span):
+        self.report(Error(f"InitialiseError: '{name}' is already declared", text_span))
 
     def reassignConstError(self, name, text_span):
         self.report(
             Error(
-                f"ReassignConstError: {name} is declared as 'const' and cannot be reassigned\
+                f"ReassignConstError: '{name}' is declared as 'const' and cannot be reassigned\
                 \n    Use 'int', 'float', 'string', 'bool' or 'var' instead",
                 text_span,
             )

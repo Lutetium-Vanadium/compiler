@@ -1,6 +1,7 @@
 from lexer import Lexer
 from syntax_tree.AssignmentNode import AssignmentNode
 from syntax_tree.BinaryNode import *
+from syntax_tree.DeclarationNode import DeclarationNode
 from syntax_tree.ExpressionNode import ExpressionNode
 from syntax_tree.UnaryNode import *
 from token_handling.Token import *
@@ -59,14 +60,16 @@ class Parser:
 
     def evaluateDeclareExpression(self):
         declarationToken = self.match(TokenTypes.DeclarationKeyword)
-
+        declarationKeyword = declarationToken.token_value.value
         name = self.cur().token_value.value
-        data_type, isConst = getStatsFromDeclarationToken(declarationToken)
+        data_type, isConst = getStatsFromDeclarationKeyword(declarationKeyword)
         var = Variable(name, data_type=data_type, isConst=isConst)
 
         self.variables[name] = var
 
-        return self.evaluateAssignmentExpression()
+        return DeclarationNode.fromAssignment(
+            declarationKeyword, self.evaluateAssignmentExpression()
+        )
 
     def evaluateAssignmentExpression(self):
         varNode, variableExists = self.evaluateVariableExpression()

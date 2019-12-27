@@ -1,5 +1,6 @@
 from type_handling.Types import Types
 
+
 class Variable:
     def __init__(self, name, data_type=None, value=None, isConst=False):
         self.name = name
@@ -36,8 +37,7 @@ class Variable:
         return self.value
 
 
-def getStatsFromDeclarationToken(declarationToken):
-    declarationKeyword = declarationToken.token_value.value
+def getStatsFromDeclarationKeyword(declarationKeyword):
     if declarationKeyword == "const":
         return None, True
     if declarationKeyword == "var":

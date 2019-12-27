@@ -3,6 +3,9 @@ from token_handling.Token import Token
 
 
 class Node:
+    def isInstance(self, *args):
+        return self.operatorToken in args
+
     def getLastChild(self):
         children = self.getChildren()
         if isinstance(children, (tuple, list)):

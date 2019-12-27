@@ -1,5 +1,6 @@
 from token_handling.TokenTypes import *
 from syntax_tree.Node import Node
+from textSpan import TextSpan
 
 
 class BinaryNode(Node):
@@ -7,6 +8,9 @@ class BinaryNode(Node):
         self.left = child1
         self.right = child2
         self.operatorToken = operatorToken
+        start = left.text_span.start
+        end = right.text_span.end
+        self.text_span = TextSpan(start, end - start)
 
     def __repr__(self):
         return f"Children: {self.getChildren()}, OperatorToken: {self.operatorToken}"
@@ -23,7 +27,7 @@ class BinaryOperatorNode(BinaryNode):
         super().__init__(child1, child2, operatorToken)
 
     def evaluate(self):
-        # Arthimetic Operators
+        # Arithmetic Operators
         if self.operatorToken.token_type == TokenTypes.PlusOperator:
             return self.left.evaluate() + self.right.evaluate()
         if self.operatorToken.token_type == TokenTypes.MinusOperator:
@@ -34,7 +38,7 @@ class BinaryOperatorNode(BinaryNode):
             return self.left.evaluate() / self.right.evaluate()
         if self.operatorToken.token_type == TokenTypes.ModOperator:
             return self.left.evaluate() % self.right.evaluate()
-        if self.operatorToken.token_type == TokenTypes.CarotOperator:
+        if self.operatorToken.token_type == TokenTypes.CaretOperator:
             return self.left.evaluate() ** self.right.evaluate()
 
         # Boolean Operators
