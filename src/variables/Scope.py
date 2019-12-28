@@ -28,7 +28,14 @@ class Scope:
 
         return self.parentScope.tryGetVariable(varName)
 
+    def setValue(self, varName, newNode):
+        variable = self.variables.get(varName)
+        if variable:
+            self.variables[varName].trySetValue(newNode)
+        elif not self.isGlobalScope:
+            self.parentScope.setValue(varName, newNode)
+
     def updateValue(self, varName, newValue, textSpan):
-        var = self.variables[varName]
+        success, var = self.tryGetVariable(varName)
         newNode = BoundLiteralExpression(var.type, newValue, textSpan)
-        self.variables[varName].trySetValue(newNode)
+        self.setValue(varName, newNode)
