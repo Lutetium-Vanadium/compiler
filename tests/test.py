@@ -11,28 +11,6 @@ from src.error.ErrorBag import ErrorBag
 from src.variables.Scope import Scope
 
 
-def run_expression(text, expected_type):
-    scope = Scope()
-    errorBag = ErrorBag()
-    parser = Parser(errorBag)
-    errorBag.addText(text)
-    _, rootNode, errorBag = parser.parse(text, errorBag)
-    binder = Binder(rootNode, errorBag, scope)
-    boundTree, scope, errorBag = binder.bind()
-
-    if errorBag.any():
-        return None
-    else:
-        evaluator = Evaluator(boundTree, scope)
-        e = str(evaluator.evaluate())
-        if expected_type == "int":
-            return int(e)
-        elif expected_type == "float":
-            return float(e)
-        elif expected_type == "bool":
-            return e == "True"
-
-
 def run_multiple_expressions(txt_lst, expected_type, returnType="single"):
     """
     txt_lst: List of commands to run
@@ -54,7 +32,7 @@ def run_multiple_expressions(txt_lst, expected_type, returnType="single"):
         if errorBag.any():
             output_lst.append(None)
         else:
-            evaluator = Evaluator(boundTree, scope)
+            evaluator = Evaluator(boundTree)
             e = str(evaluator.evaluate())
             if expected_type == "int":
                 e = int(e)
@@ -68,6 +46,10 @@ def run_multiple_expressions(txt_lst, expected_type, returnType="single"):
         return output_lst[-1]
     elif returnType == "all":
         return output_lst
+
+
+def run_expression(text, expected_type):
+    return run_multiple_expressions([text], expected_type)
 
 
 class TestOperations(TestCase):
@@ -203,3 +185,70 @@ class TestOperations(TestCase):
         self.assertEqual(
             run_multiple_expressions(to_run, "int", "all"), expected_output
         )
+
+    def test_scoping(self):
+        to_test = """\
+            int a = 23
+            {
+                a += 27
+            }
+        """
+        self.assertEqual(run_expression(to_test, "int"), 50)
+
+        to_test = """\
+            int a = 23
+            {
+                a += 27
+            }
+            a
+        """
+        self.assertEqual(run_expression(to_test, "int"), 50)
+
+        to_test = """\
+            int a = 23
+            {
+                int a = 4
+                a + 4
+            }
+        """
+        self.assertEqual(run_expression(to_test, "int"), 8)
+
+        to_test = """\
+            int a = 23
+            {
+                bool a = true
+                a && true
+            }
+        """
+        self.assertEqual(run_expression(to_test, "bool"), True)
+
+        to_test = """\
+            int a = 23
+            {
+                bool a = true
+            }
+            a
+        """
+        self.assertEqual(run_expression(to_test, "int"), 23)
+
+        to_test = """\
+            int a = 23
+            {
+                int a = 75
+                {
+                    a += 23
+                }
+                a
+            }
+        """
+        self.assertEqual(run_expression(to_test, "int"), 98)
+
+        to_test = """\
+            int a = 23
+            {
+                int a = 2
+                a += 23287
+            }
+            a
+        """
+        self.assertEqual(run_expression(to_test, "int"), 23)
