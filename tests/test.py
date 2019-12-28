@@ -1,11 +1,9 @@
 from unittest import TestCase
 import os, sys
 
-e = os.getcwd()
 sys.path.append("/".join(os.getcwd().split("/")[:-1]))
 sys.path.append("/".join(os.getcwd().split("/")[:-1]) + "/src")
 sys.path.append(os.getcwd() + "/src")
-sys.path.append(os.getcwd())
 from src.parser import Parser
 from src.Evaluator import Evaluator
 from src.binder.Binder import Binder
