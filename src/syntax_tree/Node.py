@@ -14,6 +14,9 @@ class Node:
         else:
             return children
 
+    def get_txt(self):
+        return self.operatorToken
+
     def prt(self, node=None, indent="", isLast=True):
         if node == None:
             node = self
@@ -29,7 +32,7 @@ class Node:
             print_color(node, fg=BRIGHT_GREEN)
         else:
             hasChildren = True
-            print_color(node.operatorToken, fg=BRIGHT_BLUE)
+            print_color(node.get_txt(), fg=BRIGHT_BLUE)
 
         indent += "   " if isLast else "│  "
 

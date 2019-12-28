@@ -1,5 +1,6 @@
 from binder.BoundAssignmentExpression import BoundAssignmentExpression
 from binder.BoundBinaryExpression import BoundBinaryExpression
+from binder.BoundBlockStatement import BoundBlockStatement
 from binder.BoundDeclarationExpression import BoundDeclarationExpression
 from binder.BoundLiteralExpression import BoundLiteralExpression
 from binder.BoundVariableExpression import BoundVariableExpression
@@ -18,6 +19,9 @@ class Evaluator:
         return self.evaluateNode(self.syntaxTree)
 
     def evaluateNode(self, node):
+        if isinstance(node, BoundBlockStatement):
+            return self.evaluateBlockStatement(node)
+
         if isinstance(node, BoundAssignmentExpression):
             return self.evaluateAssignmentExpression(node)
 
@@ -35,6 +39,12 @@ class Evaluator:
 
         if isinstance(node, BoundDeclarationExpression):
             return self.evaluateDeclarationExpression(node)
+
+    def evaluateBlockStatement(self, node):
+        value = None
+        for boundExpression in node.children:
+            value = self.evaluateNode(boundExpression)
+        return value
 
     def evaluateAssignmentExpression(self, node):
         self.scope.updateValue(

@@ -10,7 +10,7 @@ class AssignmentNode(Node):
         self.operatorToken = operatorToken
         start = identifier.text_span.start
         end = expression.text_span.end
-        self.text_span = TextSpan(start, start-end)
+        self.text_span = TextSpan(start, start - end)
 
     def __repr__(self):
         return f"Variable {self.identifier} = {self.expression}"
@@ -20,6 +20,3 @@ class AssignmentNode(Node):
 
     def getChildren(self):
         return self.identifier, self.expression
-
-    def evaluate(self):
-        return self.identifier.evaluate()

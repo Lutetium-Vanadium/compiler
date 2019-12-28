@@ -64,6 +64,8 @@ OPERATOR_TYPES = (
     TokenTypes.MinusMinusOperator,
     TokenTypes.OpenParan,
     TokenTypes.CloseParan,
+    TokenTypes.OpenBrace,
+    TokenTypes.CloseBrace,
     TokenTypes.OrOperator,
     TokenTypes.AndOperator,
     TokenTypes.NotOperator,

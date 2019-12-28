@@ -1,5 +1,6 @@
 from syntax_tree.AssignmentNode import AssignmentNode
 from syntax_tree.BinaryNode import BinaryOperatorNode
+from syntax_tree.BlockStatement import BlockStatement
 from syntax_tree.DeclarationNode import DeclarationNode
 from syntax_tree.ExpressionNode import ExpressionNode
 from syntax_tree.UnaryNode import UnaryOperatorNode
@@ -13,6 +14,7 @@ from variables.Variable import getStatsFromDeclarationKeyword
 
 from binder.BoundAssignmentExpression import BoundAssignmentExpression
 from binder.BoundBinaryExpression import BoundBinaryExpression
+from binder.BoundBlockStatement import BoundBlockStatement
 from binder.BoundDeclarationExpression import BoundDeclarationExpression
 from binder.BoundLiteralExpression import BoundLiteralExpression
 from binder.BoundVariableExpression import BoundVariableExpression
@@ -30,6 +32,9 @@ class Binder:
         return self.bindExpression(self.root), self.scope, self.errorBag
 
     def bindExpression(self, node):
+        if isinstance(node, BlockStatement):
+            return self.bindBlockStatement(node)
+
         if isinstance(node, DeclarationNode):
             return self.bindDeclarationExpression(node)
 
@@ -44,6 +49,13 @@ class Binder:
 
         if isinstance(node, ExpressionNode):
             return self.bindExpressionNode(node)
+
+    def bindBlockStatement(self, node):
+        lst = []
+        for expression in node.getChildren():
+            lst.append(self.bindExpression(expression))
+
+        return BoundBlockStatement(lst, node.text_span)
 
     def bindDeclarationExpression(self, node):
         varType, isConst = getStatsFromDeclarationKeyword(node.declarationKeyword)

@@ -1,6 +1,7 @@
 from lexer import Lexer
 from syntax_tree.AssignmentNode import AssignmentNode
 from syntax_tree.BinaryNode import *
+from syntax_tree.BlockStatement import BlockStatement
 from syntax_tree.DeclarationNode import DeclarationNode
 from syntax_tree.ExpressionNode import ExpressionNode
 from syntax_tree.UnaryNode import *
@@ -25,10 +26,11 @@ class Parser:
         self.text = text
         self.index = 0
         lexer = Lexer(self.errorBag)
-        tokenList, self.errorBag = lexer.lex(text)
+        continueToNextLine, tokenList, self.errorBag = lexer.lex(text)
         self.tokenList = self.sanitize(tokenList) + [EOF_TOKEN]
-
-        return self._parse(), self.errorBag
+        if continueToNextLine:
+            return continueToNextLine, None, self.errorBag
+        return continueToNextLine, self._parse(), self.errorBag
 
     def peek(self, offSet):
         return self.tokenList[self.index + offSet]
@@ -43,14 +45,29 @@ class Parser:
         self.index += 1
         return cur
 
-    def _parse(self):
+    def _parse(self, end_token=TokenTypes.EOF):
+        lst = []
+        while not self.cur().isInstance(end_token):
+            if self.cur().isInstance(TokenTypes.OpenBrace):
+                self.index += 1
+                lst.append(self._parse(TokenTypes.CloseBrace))
+            else:
+                lst.append(self.parseStatement())
+
+        self.index += 1
+
+        return BlockStatement(lst)
+
+    def parseStatement(self):
         if self.cur().isInstance(TokenTypes.DeclarationKeyword):
             return self.parseDeclareExpression()
 
         if self.cur().isInstance(TokenTypes.Variable):
             if self.peek(1).isInstance(TokenTypes.AssignmentOperator):
                 return self.parseAssignmentExpression()
-            elif self.peek(1).isInstance(*CALC_ASSIGN_OPERATORS) and self.peek(2).isInstance(TokenTypes.AssignmentOperator):
+            elif self.peek(1).isInstance(*CALC_ASSIGN_OPERATORS) and self.peek(
+                2
+            ).isInstance(TokenTypes.AssignmentOperator):
                 return self.parseCalculateAssignmentExpression()
 
         return self.parseBinaryExpression()
@@ -63,15 +80,15 @@ class Parser:
         varNode = self.parseGeneralExpression(TokenTypes.Variable)
         self.match(TokenTypes.AssignmentOperator)
 
-        right = self._parse()
+        right = self.parseStatement()
 
         return AssignmentNode(varNode, right, TokenTypes.AssignmentOperator)
-    
+
     def parseCalculateAssignmentExpression(self):
         varNode = self.parseGeneralExpression(TokenTypes.Variable)
         operator = self.match(*CALC_ASSIGN_OPERATORS)
         assignment_operator = self.match(TokenTypes.AssignmentOperator)
-        right = self._parse()
+        right = self.parseStatement()
         newVal = BinaryOperatorNode(varNode, right, operator)
         return AssignmentNode(varNode, newVal, assignment_operator)
 
