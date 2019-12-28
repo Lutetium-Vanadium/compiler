@@ -29,8 +29,3 @@ class ExpressionNode(Node):
             self.value.value += change
         else:
             self.value += change
-
-    def evaluate(self):
-        if self.isInstance(TokenTypes.Variable):
-            return self.value.evaluate()
-        return self.value

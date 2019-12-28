@@ -25,36 +25,3 @@ class BinaryNode(Node):
 class BinaryOperatorNode(BinaryNode):
     def __init__(self, left, right, operatorToken):
         super().__init__(left, right, operatorToken)
-
-    def evaluate(self):
-        # Arithmetic Operators
-        if self.operatorToken.token_type == TokenTypes.PlusOperator:
-            return self.left.evaluate() + self.right.evaluate()
-        if self.operatorToken.token_type == TokenTypes.MinusOperator:
-            return self.left.evaluate() - self.right.evaluate()
-        if self.operatorToken.token_type == TokenTypes.StarOperator:
-            return self.left.evaluate() * self.right.evaluate()
-        if self.operatorToken.token_type == TokenTypes.SlashOperator:
-            return self.left.evaluate() / self.right.evaluate()
-        if self.operatorToken.token_type == TokenTypes.ModOperator:
-            return self.left.evaluate() % self.right.evaluate()
-        if self.operatorToken.token_type == TokenTypes.CaretOperator:
-            return self.left.evaluate() ** self.right.evaluate()
-
-        # Boolean Operators
-        if self.operatorToken.token_type == TokenTypes.OrOperator:
-            return self.left.evaluate() or self.right.evaluate()
-        if self.operatorToken.token_type == TokenTypes.AndOperator:
-            return self.left.evaluate() and self.right.evaluate()
-        if self.operatorToken.token_type == TokenTypes.NEOperator:
-            return self.left.evaluate() != self.right.evaluate()
-        if self.operatorToken.token_type == TokenTypes.EEOperator:
-            return self.left.evaluate() == self.right.evaluate()
-        if self.operatorToken.token_type == TokenTypes.GEOperator:
-            return self.left.evaluate() >= self.right.evaluate()
-        if self.operatorToken.token_type == TokenTypes.GTOperator:
-            return self.left.evaluate() > self.right.evaluate()
-        if self.operatorToken.token_type == TokenTypes.LEOperator:
-            return self.left.evaluate() <= self.right.evaluate()
-        if self.operatorToken.token_type == TokenTypes.LTOperator:
-            return self.left.evaluate() < self.right.evaluate()
