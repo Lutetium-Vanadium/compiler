@@ -244,11 +244,62 @@ class TestOperations(TestCase):
         self.assertEqual(run_expression(to_test, "int"), 98)
 
         to_test = """\
-            int a = 23
-            {
-                int a = 2
-                a += 23287
+            if true {
+                1
+            } else {
+                2
             }
-            a
         """
-        self.assertEqual(run_expression(to_test, "int"), 23)
+        self.assertEqual(run_expression(to_test, "int"), 1)
+
+    def test_scoping(self):
+        to_test = """\
+            if true {
+                1
+            } else if true {
+                2
+            } else {
+                3
+            }
+        """
+        self.assertEqual(run_expression(to_test, "int"), 1)
+
+        to_test = """\
+            if true {
+                1
+            } else {
+                2
+            }
+        """
+        self.assertEqual(run_expression(to_test, "int"), 1)
+
+        to_test = """\
+            if false {
+                1
+            } else {
+                2
+            }
+        """
+        self.assertEqual(run_expression(to_test, "int"), 2)
+
+        to_test = """\
+            if false {
+                1
+            } else if true {
+                2
+            } else {
+                3
+            }
+        """
+        self.assertEqual(run_expression(to_test, "int"), 2)
+
+        to_test = """\
+            if false {
+                1
+            } else if false {
+                2
+            } else {
+                3
+            }
+        """
+        self.assertEqual(run_expression(to_test, "int"), 3)

@@ -3,6 +3,7 @@ from syntax_tree.BinaryNode import BinaryOperatorNode
 from syntax_tree.BlockStatement import BlockStatement
 from syntax_tree.DeclarationNode import DeclarationNode
 from syntax_tree.ExpressionNode import ExpressionNode
+from syntax_tree.IfStatement import IfStatement
 from syntax_tree.UnaryNode import UnaryOperatorNode
 
 from error.ErrorBag import ErrorBag
@@ -17,6 +18,7 @@ from binder.BoundAssignmentExpression import BoundAssignmentExpression
 from binder.BoundBinaryExpression import BoundBinaryExpression
 from binder.BoundBlockStatement import BoundBlockStatement
 from binder.BoundDeclarationExpression import BoundDeclarationExpression
+from binder.BoundIfCondition import BoundIfCondition
 from binder.BoundLiteralExpression import BoundLiteralExpression
 from binder.BoundVariableExpression import BoundVariableExpression
 from binder.BoundUnaryExpression import BoundUnaryExpression
@@ -45,6 +47,9 @@ class Binder:
 
         if isinstance(node, BinaryOperatorNode):
             return self.bindBinaryExpression(node)
+
+        if isinstance(node, IfStatement):
+            return self.bindIfStatement(node)
 
         if isinstance(node, UnaryOperatorNode):
             return self.bindUnaryExpression(node)
@@ -130,6 +135,17 @@ class Binder:
             self.errorBag.typeError(right.type, operandType, right.text_span)
 
         return BoundBinaryExpression(resultType, left, operator, right, node.text_span)
+
+    def bindIfStatement(self, node):
+        condition = self.bindExpression(node.condition)
+        if condition.type != Types.Bool:
+            self.errorBag.typeError(condition.type, Types.BOol, condition.text_span)
+        thenBlock = self.bindExpression(node.thenBlock)
+        if node.elseBlock:
+            elseBlock = self.bindExpression(node.elseBlock)
+        else:
+            elseBlock = None
+        return BoundIfCondition(condition, thenBlock, elseBlock, node.text_span)
 
     def bindUnaryExpression(self, node):
         operator = node.operatorToken

@@ -2,6 +2,7 @@ from binder.BoundAssignmentExpression import BoundAssignmentExpression
 from binder.BoundBinaryExpression import BoundBinaryExpression
 from binder.BoundBlockStatement import BoundBlockStatement
 from binder.BoundDeclarationExpression import BoundDeclarationExpression
+from binder.BoundIfCondition import BoundIfCondition
 from binder.BoundLiteralExpression import BoundLiteralExpression
 from binder.BoundVariableExpression import BoundVariableExpression
 from binder.BoundUnaryExpression import BoundUnaryExpression
@@ -28,8 +29,11 @@ class Evaluator:
         if isinstance(node, BoundBinaryExpression):
             return self.evaluateBinaryExpression(node)
 
-        if isinstance(node, BoundUnaryExpression):
-            return self.evaluateUnaryExpression(node)
+        if isinstance(node, BoundDeclarationExpression):
+            return self.evaluateDeclarationExpression(node)
+
+        if isinstance(node, BoundIfCondition):
+            return self.evaluateIfCondition(node)
 
         if isinstance(node, BoundLiteralExpression):
             return self.evaluateLiteralExpression(node)
@@ -37,8 +41,8 @@ class Evaluator:
         if isinstance(node, BoundVariableExpression):
             return self.evaluateVariableExpression(node)
 
-        if isinstance(node, BoundDeclarationExpression):
-            return self.evaluateDeclarationExpression(node)
+        if isinstance(node, BoundUnaryExpression):
+            return self.evaluateUnaryExpression(node)
 
     def evaluateBlockStatement(self, node):
         prevScope = self.scope
@@ -100,6 +104,13 @@ class Evaluator:
         # which leads to an infinite loop as 'a' keeps trying to find the value of 'a'.
 
         return self.scope.tryGetVariable(node.varName)[1]
+
+    def evaluateIfCondition(self, node):
+        isTrue = self.evaluateNode(node.condition)
+        if isTrue:
+            return self.evaluateNode(node.thenBlock)
+        elif node.elseBlock:
+            return self.evaluateNode(node.elseBlock)
 
     def evaluateLiteralExpression(self, node):
         return node.value

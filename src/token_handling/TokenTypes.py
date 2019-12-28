@@ -17,6 +17,8 @@ class TokenTypes(Enum):
     # Keywords
     Keyword = auto()
     DeclarationKeyword = auto()
+    IfKeyword = auto()
+    ElseKeyword = auto()
 
     # General type for Operators during lexing
     Operator = auto()

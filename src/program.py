@@ -8,12 +8,8 @@ from binder.Binder import Binder
 from variables.Scope import Scope
 import readline
 
-if len(sys.argv) > 1:
-    parseTree = sys.argv[1] == "parseTree"
-    boundTree = sys.argv[1] == "boundTree"
-else:
-    parseTree = False
-    bndTree = False
+parseTree = "parseTree" in sys.argv
+bndTree = "boundTree" in sys.argv
 
 
 def cmd_input(prompt, prefill):

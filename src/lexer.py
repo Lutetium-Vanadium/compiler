@@ -194,4 +194,12 @@ class Lexer:
         if text in DECLARATION_KEYWORDS:
             self.appendToken(text, TokenTypes.DeclarationKeyword, start)
         else:
-            self.appendToken(text, TokenTypes.Keyword, start)
+            self.appendToken(text, self.getTokenFromKeyword(text), start)
+
+    def getTokenFromKeyword(self, keyword):
+        if keyword == "if":
+            return TokenTypes.IfKeyword
+        elif keyword == "else":
+            return TokenTypes.ElseKeyword
+
+        raise Exception(f"Unknown keyword {keyword}")

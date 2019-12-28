@@ -4,6 +4,7 @@ from syntax_tree.BinaryNode import *
 from syntax_tree.BlockStatement import BlockStatement
 from syntax_tree.DeclarationNode import DeclarationNode
 from syntax_tree.ExpressionNode import ExpressionNode
+from syntax_tree.IfStatement import IfStatement
 from syntax_tree.UnaryNode import *
 from token_handling.Token import *
 from token_handling.TokenTypes import *
@@ -70,6 +71,9 @@ class Parser:
             ).isInstance(TokenTypes.AssignmentOperator):
                 return self.parseCalculateAssignmentExpression()
 
+        if self.cur().isInstance(TokenTypes.IfKeyword):
+            return self.parseIfStatement()
+
         return self.parseBinaryExpression()
 
     def parseDeclareExpression(self):
@@ -83,6 +87,22 @@ class Parser:
         right = self.parseStatement()
 
         return AssignmentNode(varNode, right, TokenTypes.AssignmentOperator)
+
+    def parseIfStatement(self):
+        ifToken = self.match(TokenTypes.IfKeyword)
+        condition = self.parseStatement()
+        openBrace = self.match(TokenTypes.OpenBrace)
+        thenBlock = self._parse(TokenTypes.CloseBrace)
+        elseBlock = None
+        if self.cur().isInstance(TokenTypes.ElseKeyword):
+            self.index += 1
+            if self.cur().isInstance(TokenTypes.IfKeyword):
+                elseBlock = self.parseIfStatement()
+            else:
+                self.match(TokenTypes.OpenBrace)
+                elseBlock = self._parse(TokenTypes.CloseBrace)
+
+        return IfStatement(ifToken, condition, thenBlock, elseBlock)
 
     def parseCalculateAssignmentExpression(self):
         varNode = self.parseGeneralExpression(TokenTypes.Variable)
