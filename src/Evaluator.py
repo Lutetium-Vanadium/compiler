@@ -11,9 +11,9 @@ from type_handling.Types import Types
 
 
 class Evaluator:
-    def __init__(self, syntaxTree, scope):
+    def __init__(self, syntaxTree):
         self.syntaxTree = syntaxTree
-        self.scope = scope
+        self.scope = None
 
     def evaluate(self):
         return self.evaluateNode(self.syntaxTree)
@@ -41,9 +41,12 @@ class Evaluator:
             return self.evaluateDeclarationExpression(node)
 
     def evaluateBlockStatement(self, node):
+        prevScope = self.scope
+        self.scope = node.scope
         value = None
         for boundExpression in node.children:
             value = self.evaluateNode(boundExpression)
+        self.scope = prevScope
         return value
 
     def evaluateAssignmentExpression(self, node):

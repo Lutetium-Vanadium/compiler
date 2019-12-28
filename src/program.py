@@ -120,5 +120,5 @@ while True:
         errorBag.prt()
         errorBag.clear()
     else:
-        evaluator = Evaluator(boundTree, globalScope)
+        evaluator = Evaluator(boundTree)
         print(evaluator.evaluate())

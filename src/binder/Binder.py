@@ -11,6 +11,7 @@ from type_handling.Types import Types
 from type_handling.helperFunctions import getBinaryOperatorTypes, getUnaryOperatorTypes
 
 from variables.Variable import getStatsFromDeclarationKeyword
+from variables.Scope import Scope
 
 from binder.BoundAssignmentExpression import BoundAssignmentExpression
 from binder.BoundBinaryExpression import BoundBinaryExpression
@@ -22,14 +23,15 @@ from binder.BoundUnaryExpression import BoundUnaryExpression
 
 
 class Binder:
-    def __init__(self, root, errorBag, scope):
+    def __init__(self, root, errorBag, globalScope):
         self.root = root
         self.index = 0
-        self.scope = scope
+        self.globalScope = globalScope
         self.errorBag = errorBag
+        self.currentScope = globalScope
 
     def bind(self):
-        return self.bindExpression(self.root), self.scope, self.errorBag
+        return self.bindExpression(self.root), self.globalScope, self.errorBag
 
     def bindExpression(self, node):
         if isinstance(node, BlockStatement):
@@ -51,11 +53,17 @@ class Binder:
             return self.bindExpressionNode(node)
 
     def bindBlockStatement(self, node):
+        prevScope = self.currentScope
+        if node == self.root:
+            scope = self.globalScope
+        else:
+            scope = Scope(prevScope)
+            self.currentScope = scope
         lst = []
         for expression in node.getChildren():
             lst.append(self.bindExpression(expression))
-
-        return BoundBlockStatement(lst, node.text_span)
+        self.currentScope = prevScope
+        return BoundBlockStatement(lst, scope, node.text_span)
 
     def bindDeclarationExpression(self, node):
         varType, isConst = getStatsFromDeclarationKeyword(node.declarationKeyword)
@@ -68,7 +76,9 @@ class Binder:
                 varValue.type, varType, varValue.text_span
             )
 
-        if not self.scope.tryInitialiseVariable(varName, varValue, varType, isConst):
+        if not self.currentScope.tryInitialiseVariable(
+            varName, varValue, varType, isConst
+        ):
             self.errorBag.initialiseError(varName, node.identifier.text_span)
 
         return BoundDeclarationExpression(
@@ -79,7 +89,7 @@ class Binder:
         varName = node.identifier.value
         varValue = self.bindExpression(node.expression)
 
-        success, var = self.scope.tryGetVariable(varName)
+        success, var = self.currentScope.tryGetVariable(varName)
         if not success:
             self.errorBag.nameError(varName, node.identifier.text_span)
             varType = None
@@ -142,7 +152,7 @@ class Binder:
 
     def bindExpressionNode(self, node):
         if node.isInstance(TokenTypes.Variable):
-            success, var = self.scope.tryGetVariable(node.value)
+            success, var = self.currentScope.tryGetVariable(node.value)
             if not success:
                 self.errorBag.nameError(node.value, node.text_span)
                 return BoundLiteralExpression(Types.Unknown, node.value, node.text_span)
