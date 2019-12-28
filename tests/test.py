@@ -16,7 +16,7 @@ def run_expression(text, expected_type):
     errorBag = ErrorBag()
     parser = Parser(errorBag)
     errorBag.addText(text)
-    rootNode, errorBag = parser.parse(text, errorBag)
+    _, rootNode, errorBag = parser.parse(text, errorBag)
     binder = Binder(rootNode, errorBag, scope)
     boundTree, scope, errorBag = binder.bind()
 
@@ -47,7 +47,7 @@ def run_multiple_expressions(txt_lst, expected_type, returnType="single"):
     output_lst = []
     for text in txt_lst:
         errorBag.addText(text)
-        rootNode, errorBag = parser.parse(text, errorBag)
+        _, rootNode, errorBag = parser.parse(text, errorBag)
         binder = Binder(rootNode, errorBag, scope)
         boundTree, scope, errorBag = binder.bind()
 
