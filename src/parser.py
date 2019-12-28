@@ -134,7 +134,7 @@ class Parser:
 
     def parseParanExpression(self):
         self.match(TokenTypes.OpenParan)
-        expression = self._parse()
+        expression = self.parseStatement()
         self.match(TokenTypes.CloseParan)
         return expression
 
