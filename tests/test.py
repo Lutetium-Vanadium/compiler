@@ -1,9 +1,11 @@
 from unittest import TestCase
 import os, sys
 
+e = os.getcwd()
 sys.path.append("/".join(os.getcwd().split("/")[:-1]))
 sys.path.append("/".join(os.getcwd().split("/")[:-1]) + "/src")
 sys.path.append(os.getcwd() + "/src")
+sys.path.append(os.getcwd())
 from src.parser import Parser
 from src.Evaluator import Evaluator
 from src.binder.Binder import Binder
@@ -11,7 +13,7 @@ from src.error.ErrorBag import ErrorBag
 from src.variables.Scope import Scope
 
 
-def run_expression(text):
+def run_expression(text, expected_type):
     scope = Scope()
     errorBag = ErrorBag()
     parser = Parser(errorBag)
@@ -24,48 +26,182 @@ def run_expression(text):
         return None
     else:
         evaluator = Evaluator(boundTree, scope)
-        return evaluator.evaluate()
+        e = str(evaluator.evaluate())
+        if expected_type == "int":
+            return int(e)
+        elif expected_type == "float":
+            return float(e)
+        elif expected_type == "bool":
+            return e == "True"
+
+
+def run_multiple_expressions(txt_lst, expected_type, returnType="single"):
+    """
+    txt_lst: List of commands to run
+    expected_type: [int, bool, float]
+    returnType: Gives return type
+            - single: returns last element
+            - all: returns the full list 
+    """
+    scope = Scope()
+    errorBag = ErrorBag()
+    parser = Parser(errorBag)
+    output_lst = []
+    for text in txt_lst:
+        errorBag.addText(text)
+        rootNode, errorBag = parser.parse(text, errorBag)
+        binder = Binder(rootNode, errorBag, scope)
+        boundTree, scope, errorBag = binder.bind()
+
+        if errorBag.any():
+            output_lst.append(None)
+        else:
+            evaluator = Evaluator(boundTree, scope)
+            e = str(evaluator.evaluate())
+            if expected_type == "int":
+                e = int(e)
+            elif expected_type == "float":
+                e = float(e)
+            elif expected_type == "bool":
+                e = e == "True"
+
+            output_lst.append(e)
+    if returnType == "single":
+        return output_lst[-1]
+    elif returnType == "all":
+        return output_lst
 
 
 class TestOperations(TestCase):
     def test_arithmetic(self):
-        self.assertEqual(run_expression("1+1"), 2)
-        self.assertEqual(run_expression("387-23"), 364)
-        self.assertEqual(run_expression("23*3"), 69)
-        self.assertEqual(run_expression("23 / 6"), 3)
-        self.assertEqual(run_expression("3^4"), 81)
-        self.assertAlmostEqual(run_expression("23.0 / 6"), 23 / 6)
+        self.assertEqual(run_expression("1+1", "int"), 2)
+        self.assertEqual(run_expression("387-23", "int"), 364)
+        self.assertEqual(run_expression("23*3", "int"), 69)
+        self.assertEqual(run_expression("23 / 6", "int"), 3)
+        self.assertEqual(run_expression("3^4", "int"), 81)
+        self.assertAlmostEqual(run_expression("23.0 / 6", "float"), 23 / 6)
+
+        self.assertEqual(run_expression("12 + 23 - ((23 * 56 / 12)%7)^3", "int"), 27)
+        self.assertEqual(run_expression("32 * 23 + 223 - (2 - 24 * 2)/27", "int"), 961)
+        self.assertEqual(run_expression("23^2 - 212*23 +(213 - 1 * 231)", "int"), -4365)
+        self.assertAlmostEqual(run_expression("23.4 * (23 + 12)/2.1", "float"), 390.0)
+        self.assertAlmostEqual(
+            run_expression("23^2 - 212.4/23 +(213 - 1.7/23)", "float"),
+            23 ** 2 - 212.4 / 23 + (213 - 1.7 / 23),
+        )
+        self.assertAlmostEqual(
+            run_expression("32 * 23 + 223 - (2 - 24.0 * 2)/27", "float"),
+            (32 * 23 + 223 - (2 - 24 * 2) / 27),
+        )
 
     def test_boolean(self):
-        self.assertEqual(run_expression("true || true"), True)
-        self.assertEqual(run_expression("true || false"), True)
-        self.assertEqual(run_expression("false || true"), True)
-        self.assertEqual(run_expression("false || false"), False)
+        self.assertEqual(run_expression("true || true", "bool"), True)
+        self.assertEqual(run_expression("true || false", "bool"), True)
+        self.assertEqual(run_expression("false || true", "bool"), True)
+        self.assertEqual(run_expression("false || false", "bool"), False)
 
-        self.assertEqual(run_expression("true && true"), True)
-        self.assertEqual(run_expression("true && false"), False)
-        self.assertEqual(run_expression("false && true"), False)
-        self.assertEqual(run_expression("false && false"), False)
+        self.assertEqual(run_expression("true && true", "bool"), True)
+        self.assertEqual(run_expression("true && false", "bool"), False)
+        self.assertEqual(run_expression("false && true", "bool"), False)
+        self.assertEqual(run_expression("false && false", "bool"), False)
 
-        self.assertEqual(run_expression("!true"), False)
-        self.assertEqual(run_expression("!false"), True)
+        self.assertEqual(run_expression("!true", "bool"), False)
+        self.assertEqual(run_expression("!false", "bool"), True)
 
-        self.assertEqual(run_expression("23 > 1"), True)
-        self.assertEqual(run_expression("2 > 12"), False)
+        self.assertEqual(run_expression("true && (true || false)", "bool"), True)
+        self.assertEqual(run_expression("false || true && (!true)", "bool"), False)
+        self.assertEqual(run_expression("true && (!true || false)", "bool"), False)
+        self.assertEqual(
+            run_expression("(false && true) || (!false || !true)", "bool"), True
+        )
 
-        self.assertEqual(run_expression("23 < 1"), False)
-        self.assertEqual(run_expression("2 < 12"), True)
+        self.assertEqual(run_expression("23 > 1", "bool"), True)
+        self.assertEqual(run_expression("2 > 12", "bool"), False)
 
-        self.assertEqual(run_expression("23 >= 1"), True)
-        self.assertEqual(run_expression("2 >= 12"), False)
-        self.assertEqual(run_expression("12 >= 12"), True)
+        self.assertEqual(run_expression("23 < 1", "bool"), False)
+        self.assertEqual(run_expression("2 < 12", "bool"), True)
 
-        self.assertEqual(run_expression("23 <= 1"), False)
-        self.assertEqual(run_expression("2 <= 12"), True)
-        self.assertEqual(run_expression("12 <= 12"), True)
+        self.assertEqual(run_expression("23 >= 1", "bool"), True)
+        self.assertEqual(run_expression("2 >= 12", "bool"), False)
+        self.assertEqual(run_expression("12 >= 12", "bool"), True)
 
-        self.assertEqual(run_expression("12 != 12"), False)
-        self.assertEqual(run_expression("32 != 12"), True)
+        self.assertEqual(run_expression("23 <= 1", "bool"), False)
+        self.assertEqual(run_expression("2 <= 12", "bool"), True)
+        self.assertEqual(run_expression("12 <= 12", "bool"), True)
 
-        self.assertEqual(run_expression("12 == 12"), True)
-        self.assertEqual(run_expression("12 == 42"), False)
+        self.assertEqual(run_expression("12 != 12", "bool"), False)
+        self.assertEqual(run_expression("32 != 12", "bool"), True)
+
+        self.assertEqual(run_expression("12 == 12", "bool"), True)
+        self.assertEqual(run_expression("12 == 42", "bool"), False)
+
+    def test_variables(self):
+        self.assertEqual(run_expression("int a = 2", "int"), 2)
+        self.assertEqual(run_expression("var a = 2", "int"), 2)
+        self.assertEqual(run_expression("const a = 2", "int"), 2)
+        self.assertEqual(run_expression("float a = 2.0", "float"), 2.0)
+        self.assertEqual(run_expression("bool a = false", "bool"), False)
+
+        self.assertEqual(
+            run_multiple_expressions(["var a = true", "!a"], "bool"), False
+        )
+
+        self.assertEqual(
+            run_multiple_expressions(["var a = false", "!a"], "bool"), True
+        )
+
+        to_run = [
+            "bool a = true",
+            "bool b = false",
+            "a || a",
+            "a || b",
+            "b || a",
+            "b || b",
+            "a && a",
+            "a && b",
+            "b && a",
+            "b && b",
+            "a &&= false",
+            "b ||= true",
+            "a == b",
+        ]
+
+        expected_output = [
+            True,
+            False,
+            True,
+            True,
+            True,
+            False,
+            True,
+            False,
+            False,
+            False,
+            False,
+            True,
+            False,
+        ]
+        self.assertEqual(
+            run_multiple_expressions(to_run, "bool", "all"), expected_output
+        )
+
+        to_run = [
+            "int a = 23",
+            "a += 46",
+            "int b = 41",
+            "b -= 12",
+            "int c = 13",
+            "c *= 11",
+            "int d = 23",
+            "d /= 7",
+            "int e = 23",
+            "e %= 7",
+        ]
+
+        length = len(to_run)
+
+        expected_output = [23, 69, 41, 29, 13, 143, 23, 3, 23, 2]
+
+        self.assertEqual(
+            run_multiple_expressions(to_run, "int", "all"), expected_output
+        )
