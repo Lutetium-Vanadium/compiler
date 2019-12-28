@@ -9,9 +9,11 @@ from variables.Scope import Scope
 import readline
 
 if len(sys.argv) > 1:
-    debug = sys.argv[1] == "true"
+    parseTree = sys.argv[1] == "parseTree"
+    boundTree = sys.argv[1] == "boundTree"
 else:
-    debug = False
+    parseTree = False
+    bndTree = False
 
 
 def cmd_input(prompt, prefill):
@@ -43,14 +45,18 @@ expression = ""
 indent = ""
 
 while True:
-    if continueToNextLine:
-        s = "··· "
-    elif bash:
+    if bash:
         s = "$ "
-    elif debug:
-        s = "┌>> "
+    elif parseTree or bndTree:
+        if continueToNextLine:
+            s = "├·· "
+        else:
+            s = "┌>> "
     else:
-        s = ">>> "
+        if continueToNextLine:
+            s = "··· "
+        else:
+            s = ">>> "
     new_expression = cmd_input(s, indent)
 
     if continueToNextLine:
@@ -81,12 +87,21 @@ while True:
         expression = ""
         indent = ""
         continue
-    if expression == "debug":
-        debug = not debug
-        if debug:
-            print("Debugging now enabled.")
+    if expression == "parseTree":
+        parseTree = not parseTree
+        if parseTree:
+            print("Showing Parsed Tree.")
         else:
-            print("Debugging now disabled.")
+            print("Not showing Parsed Tree.")
+        expression = ""
+        indent = ""
+        continue
+    if expression == "boundTree":
+        bndTree = not bndTree
+        if bndTree:
+            print("Showing Bound Tree.")
+        else:
+            print("Not showing Bound Tree.")
         expression = ""
         indent = ""
         continue
@@ -113,8 +128,12 @@ while True:
     binder = Binder(rootNode, errorBag, globalScope)
     boundTree, globalScope, errorBag = binder.bind()
 
-    if debug:
+    if parseTree:
         rootNode.prt()
+        print()
+    if bndTree:
+        boundTree.prt()
+        print()
 
     if errorBag.any():
         errorBag.prt()

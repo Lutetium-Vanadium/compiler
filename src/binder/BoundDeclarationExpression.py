@@ -13,3 +13,9 @@ class BoundDeclarationExpression(BoundAssignmentExpression):
 
     def __repr__(self):
         return f"{self.declarationKeyword} {self.varName} = {self.varValue}"
+
+    def get_children(self):
+        return super().get_children()
+
+    def get_txt(self):
+        return f"BoundDeclaration '{self.declarationKeyword}' for '{self.varName}' - <{self.type}>"

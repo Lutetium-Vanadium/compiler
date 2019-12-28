@@ -1,4 +1,7 @@
-class BoundBinaryExpression:
+from binder.BoundNode import BoundNode
+
+
+class BoundBinaryExpression(BoundNode):
     def __init__(self, expressionType, left, operator, right, text_span):
         self.type = expressionType
         self.left = left
@@ -11,3 +14,11 @@ class BoundBinaryExpression:
 
     def __str__(self):
         return f"Left: {self.left}, Operator: {self.operator}, Right: {self.right}"
+
+    def get_children(self):
+        return [self.left, self.right]
+
+    def get_txt(self):
+        return (
+            f"BoundBinaryExpression {self.operator.token_value.value} - <{self.type}>"
+        )

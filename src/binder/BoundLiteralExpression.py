@@ -1,4 +1,7 @@
-class BoundLiteralExpression:
+from binder.BoundNode import BoundNode
+
+
+class BoundLiteralExpression(BoundNode):
     def __init__(self, expressionType, value, text_span):
         self.type = expressionType
         self.value = value
@@ -9,3 +12,6 @@ class BoundLiteralExpression:
 
     def __str__(self):
         return str(self.value)
+
+    def get_txt(self):
+        return f"BoundLiteral '{self.value}' - <{self.type}>"
