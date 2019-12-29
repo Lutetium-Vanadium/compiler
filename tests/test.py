@@ -303,3 +303,13 @@ class TestOperations(TestCase):
             }
         """
         self.assertEqual(run_expression(to_test, "int"), 3)
+
+    def test_loops(self):
+        to_run = ["int r = 0", "for i in range(11) { r += i }", "r"]
+        self.assertEqual(run_multiple_expressions(to_run, "int"), 55)
+
+        to_run = ["int r = 0", "int i = 1", "while (i <= 100){ r += i  i += 1 }", "r"]
+        self.assertEqual(run_multiple_expressions(to_run, "int"), 5050)
+
+        to_run = ["int a = 1", "int c = 0", "while a < 1024 { a *= 2  c += 1 }", "c"]
+        self.assertEqual(run_multiple_expressions(to_run, "int"), 10)

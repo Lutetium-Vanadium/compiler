@@ -4,6 +4,7 @@ from syntax_tree.BlockStatement import BlockStatement
 from syntax_tree.DeclarationNode import DeclarationNode
 from syntax_tree.ExpressionNode import ExpressionNode
 from syntax_tree.IfStatement import IfStatement
+from syntax_tree.WhileStatement import WhileStatement
 from syntax_tree.UnaryNode import UnaryOperatorNode
 
 from error.ErrorBag import ErrorBag
@@ -18,9 +19,10 @@ from binder.BoundAssignmentExpression import BoundAssignmentExpression
 from binder.BoundBinaryExpression import BoundBinaryExpression
 from binder.BoundBlockStatement import BoundBlockStatement
 from binder.BoundDeclarationExpression import BoundDeclarationExpression
-from binder.BoundIfCondition import BoundIfCondition
+from binder.BoundIfStatement import BoundIfStatement
 from binder.BoundLiteralExpression import BoundLiteralExpression
 from binder.BoundVariableExpression import BoundVariableExpression
+from binder.BoundWhileStatement import BoundWhileStatement
 from binder.BoundUnaryExpression import BoundUnaryExpression
 
 
@@ -48,14 +50,17 @@ class Binder:
         if isinstance(node, BinaryOperatorNode):
             return self.bindBinaryExpression(node)
 
+        if isinstance(node, ExpressionNode):
+            return self.bindExpressionNode(node)
+
         if isinstance(node, IfStatement):
             return self.bindIfStatement(node)
 
+        if isinstance(node, WhileStatement):
+            return self.bindWhileStatement(node)
+
         if isinstance(node, UnaryOperatorNode):
             return self.bindUnaryExpression(node)
-
-        if isinstance(node, ExpressionNode):
-            return self.bindExpressionNode(node)
 
     def bindBlockStatement(self, node):
         prevScope = self.currentScope
@@ -136,16 +141,35 @@ class Binder:
 
         return BoundBinaryExpression(resultType, left, operator, right, node.text_span)
 
+    def bindExpressionNode(self, node):
+        if node.isInstance(TokenTypes.Variable):
+            success, var = self.currentScope.tryGetVariable(node.value)
+            if not success:
+                self.errorBag.nameError(node.value, node.text_span)
+                return BoundLiteralExpression(Types.Unknown, node.value, node.text_span)
+
+            return BoundVariableExpression(var, node.text_span)
+        else:
+            return BoundLiteralExpression(node.type, node.value, node.text_span)
+
     def bindIfStatement(self, node):
         condition = self.bindExpression(node.condition)
         if condition.type != Types.Bool:
-            self.errorBag.typeError(condition.type, Types.BOol, condition.text_span)
+            self.errorBag.typeError(condition.type, Types.Bool, condition.text_span)
         thenBlock = self.bindExpression(node.thenBlock)
         if node.elseBlock:
             elseBlock = self.bindExpression(node.elseBlock)
         else:
             elseBlock = None
-        return BoundIfCondition(condition, thenBlock, elseBlock, node.text_span)
+        return BoundIfStatement(condition, thenBlock, elseBlock, node.text_span)
+    
+    def bindWhileStatement(self, node):
+        condition = self.bindExpression(node.condition)
+        if condition.type != Types.Bool:
+            self.errorBag.typeError(condition.type, Types.Bool, condition.text_span)
+        whileBlock = self.bindExpression(node.whileBlock)
+        
+        return BoundWhileStatement(condition, whileBlock, node.text_span)
 
     def bindUnaryExpression(self, node):
         operator = node.operatorToken
@@ -165,14 +189,3 @@ class Binder:
             self.errorBag.typeError(operand.type, operandType, operand.text_span)
 
         return BoundUnaryExpression(resultType, operator, operand, node.text_span)
-
-    def bindExpressionNode(self, node):
-        if node.isInstance(TokenTypes.Variable):
-            success, var = self.currentScope.tryGetVariable(node.value)
-            if not success:
-                self.errorBag.nameError(node.value, node.text_span)
-                return BoundLiteralExpression(Types.Unknown, node.value, node.text_span)
-
-            return BoundVariableExpression(var, node.text_span)
-        else:
-            return BoundLiteralExpression(node.type, node.value, node.text_span)

@@ -2,9 +2,10 @@ from binder.BoundAssignmentExpression import BoundAssignmentExpression
 from binder.BoundBinaryExpression import BoundBinaryExpression
 from binder.BoundBlockStatement import BoundBlockStatement
 from binder.BoundDeclarationExpression import BoundDeclarationExpression
-from binder.BoundIfCondition import BoundIfCondition
+from binder.BoundIfStatement import BoundIfStatement
 from binder.BoundLiteralExpression import BoundLiteralExpression
 from binder.BoundVariableExpression import BoundVariableExpression
+from binder.BoundWhileStatement import BoundWhileStatement
 from binder.BoundUnaryExpression import BoundUnaryExpression
 
 from token_handling.TokenTypes import TokenTypes
@@ -32,7 +33,7 @@ class Evaluator:
         if isinstance(node, BoundDeclarationExpression):
             return self.evaluateDeclarationExpression(node)
 
-        if isinstance(node, BoundIfCondition):
+        if isinstance(node, BoundIfStatement):
             return self.evaluateIfCondition(node)
 
         if isinstance(node, BoundLiteralExpression):
@@ -40,6 +41,9 @@ class Evaluator:
 
         if isinstance(node, BoundVariableExpression):
             return self.evaluateVariableExpression(node)
+
+        if isinstance(node, BoundWhileStatement):
+            return self.evaluateWhileStatement(node)
 
         if isinstance(node, BoundUnaryExpression):
             return self.evaluateUnaryExpression(node)
@@ -122,6 +126,12 @@ class Evaluator:
 
         # All non declared variables should be taken care of in the binder
         raise NameError(f"Variable {node.var.name} doesn't exist.")
+
+    def evaluateWhileStatement(self, node):
+        value = None
+        while self.evaluateNode(node.condition):
+            value = self.evaluateNode(node.whileBlock)
+        return value
 
     def evaluateUnaryExpression(self, node):
         if node.operator.isInstance(TokenTypes.MinusOperator):

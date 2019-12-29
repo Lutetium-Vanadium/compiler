@@ -5,6 +5,8 @@ from syntax_tree.BlockStatement import BlockStatement
 from syntax_tree.DeclarationNode import DeclarationNode
 from syntax_tree.ExpressionNode import ExpressionNode
 from syntax_tree.IfStatement import IfStatement
+from syntax_tree.ForStatement import constructForStatement
+from syntax_tree.WhileStatement import WhileStatement
 from syntax_tree.UnaryNode import *
 from token_handling.Token import *
 from token_handling.TokenTypes import *
@@ -74,6 +76,12 @@ class Parser:
         if self.cur().isInstance(TokenTypes.IfKeyword):
             return self.parseIfStatement()
 
+        if self.cur().isInstance(TokenTypes.WhileKeyword):
+            return self.parseWhileStatement()
+
+        if self.cur().isInstance(TokenTypes.ForKeyword):
+            return self.parseForStatement()
+
         return self.parseBinaryExpression()
 
     def parseDeclareExpression(self):
@@ -103,6 +111,25 @@ class Parser:
                 elseBlock = self._parse(TokenTypes.CloseBrace)
 
         return IfStatement(ifToken, condition, thenBlock, elseBlock)
+
+    def parseWhileStatement(self):
+        whileToken = self.match(TokenTypes.WhileKeyword)
+        condition = self.parseStatement()
+        openBrace = self.match(TokenTypes.OpenBrace)
+        whileBlock = self._parse(TokenTypes.CloseBrace)
+
+        return WhileStatement(whileToken, condition, whileBlock)
+
+    def parseForStatement(self):
+        forToken = self.match(TokenTypes.ForKeyword)
+        variable = self.parseGeneralExpression(TokenTypes.Variable)
+        inToken = self.match(TokenTypes.InKeyword)
+        rangeToken = self.match(TokenTypes.RangeKeyword)
+        upperBound = self.parseParanExpression()
+        openBrace = self.match(TokenTypes.OpenBrace)
+        forBlock = self._parse(TokenTypes.CloseBrace)
+
+        return constructForStatement(variable, upperBound, forBlock)
 
     def parseCalculateAssignmentExpression(self):
         varNode = self.parseGeneralExpression(TokenTypes.Variable)

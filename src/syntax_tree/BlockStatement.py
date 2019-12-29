@@ -25,6 +25,11 @@ class BlockStatement(Node):
             s += f"\n{i}"
         return s
 
+    def add(self, *args):
+        self.statement_lst.extend(args)
+        newEnd = self.statement_lst[-1].text_span.end
+        self.text_span.changeEnd(newEnd)
+
     def getChildren(self):
         return self.statement_lst
 

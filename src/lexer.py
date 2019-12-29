@@ -201,5 +201,13 @@ class Lexer:
             return TokenTypes.IfKeyword
         elif keyword == "else":
             return TokenTypes.ElseKeyword
+        elif keyword == "while":
+            return TokenTypes.WhileKeyword
+        elif keyword == "for":
+            return TokenTypes.ForKeyword
+        elif keyword == "in":
+            return TokenTypes.InKeyword
+        elif keyword == "range":
+            return TokenTypes.RangeKeyword
 
         raise Exception(f"Unknown keyword {keyword}")

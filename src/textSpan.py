@@ -6,3 +6,7 @@ class TextSpan:
 
     def __len__(self):
         return self.length
+
+    def changeEnd(self, newEnd):
+        self.length = newEnd - self.start
+        self.end = newEnd
