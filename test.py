@@ -1,8 +1,6 @@
 from unittest import TestCase
 import os, sys
 
-sys.path.append("/".join(os.getcwd().split("/")[:-1]))
-sys.path.append("/".join(os.getcwd().split("/")[:-1]) + "/src")
 sys.path.append(os.getcwd() + "/src")
 from src.parser import Parser
 from src.Evaluator import Evaluator
