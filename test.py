@@ -9,7 +9,7 @@ from src.error.ErrorBag import ErrorBag
 from src.variables.Scope import Scope
 
 
-def run_multiple_expressions(txt_lst, expected_type, returnType="single"):
+def run_multiple_expressions(txt_lst, expected_type="string", returnType="single"):
     """
     txt_lst: List of commands to run
     expected_type: [int, bool, float]
@@ -46,7 +46,7 @@ def run_multiple_expressions(txt_lst, expected_type, returnType="single"):
         return output_lst
 
 
-def run_expression(text, expected_type):
+def run_expression(text, expected_type="string"):
     return run_multiple_expressions([text], expected_type)
 
 
@@ -112,6 +112,19 @@ class TestOperations(TestCase):
 
         self.assertEqual(run_expression("12 == 12", "bool"), True)
         self.assertEqual(run_expression("12 == 42", "bool"), False)
+    
+    def test_string(self):
+        self.assertEqual(run_expression("'Hello' + 'World'", "string"), "HelloWorld")
+        self.assertEqual(run_expression("'Hello' + 23"), "Hello23")
+        self.assertEqual(run_expression("'Hello' + true"), "HelloTrue")
+        self.assertEqual(run_expression("'Hello' + 232.464"), "Hello232.464")
+
+        self.assertEqual(run_expression("23 + 'Hello'"), "23Hello")
+        self.assertEqual(run_expression("true + 'Hello'"), "TrueHello")
+        self.assertEqual(run_expression("232.464 + 'Hello'"), "232.464Hello")
+
+        self.assertEqual(run_expression("'Hello' * 2"), "HelloHello")
+        self.assertEqual(run_expression("2 * 'Hello'"), "HelloHello")
 
     def test_variables(self):
         self.assertEqual(run_expression("int a = 2", "int"), 2)
