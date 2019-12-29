@@ -66,6 +66,10 @@ class Evaluator:
     def evaluateBinaryExpression(self, node):
         # Arithmetic Operators
         if node.operator.isInstance(TokenTypes.PlusOperator):
+            if node.type == Types.String:
+                return str(self.evaluateNode(node.left)) + str(
+                    self.evaluateNode(node.right)
+                )
             return self.evaluateNode(node.left) + self.evaluateNode(node.right)
         if node.operator.isInstance(TokenTypes.MinusOperator):
             return self.evaluateNode(node.left) - self.evaluateNode(node.right)

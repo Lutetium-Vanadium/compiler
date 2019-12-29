@@ -24,9 +24,10 @@ class TokenTypes(Enum):
     InKeyword = auto()
     RangeKeyword = auto()
 
-    # General type for Operators during lexing
+    # General types during lexing
     Operator = auto()
     Text = auto()
+    StringMarker = auto()
 
     # Operators
     PlusOperator = auto()  #            +
@@ -49,6 +50,11 @@ class TokenTypes(Enum):
     GTOperator = auto()  #              >
     LEOperator = auto()  #              <=
     GEOperator = auto()  #              >=
+
+    # String markers
+    SingleQuote = auto()  #             '
+    DoubleQuote = auto()  #             "
+    BackTick = auto()  #                `
 
     OpenParan = auto()  #               (
     CloseParan = auto()  #              )
@@ -93,6 +99,8 @@ CALC_ASSIGN_OPERATORS = (
     TokenTypes.OrOperator,
     TokenTypes.AndOperator,
 )
+
+STRING_MARKERS = (TokenTypes.BackTick, TokenTypes.DoubleQuote, TokenTypes.SingleQuote)
 
 
 def getUnaryPrecedence(token):

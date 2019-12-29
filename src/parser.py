@@ -96,6 +96,14 @@ class Parser:
 
         return AssignmentNode(varNode, right, TokenTypes.AssignmentOperator)
 
+    def parseCalculateAssignmentExpression(self):
+        varNode = self.parseGeneralExpression(TokenTypes.Variable)
+        operator = self.match(*CALC_ASSIGN_OPERATORS)
+        assignment_operator = self.match(TokenTypes.AssignmentOperator)
+        right = self.parseStatement()
+        newVal = BinaryOperatorNode(varNode, right, operator)
+        return AssignmentNode(varNode, newVal, assignment_operator)
+
     def parseIfStatement(self):
         ifToken = self.match(TokenTypes.IfKeyword)
         condition = self.parseStatement()
@@ -130,14 +138,6 @@ class Parser:
         forBlock = self._parse(TokenTypes.CloseBrace)
 
         return constructForStatement(variable, upperBound, forBlock)
-
-    def parseCalculateAssignmentExpression(self):
-        varNode = self.parseGeneralExpression(TokenTypes.Variable)
-        operator = self.match(*CALC_ASSIGN_OPERATORS)
-        assignment_operator = self.match(TokenTypes.AssignmentOperator)
-        right = self.parseStatement()
-        newVal = BinaryOperatorNode(varNode, right, operator)
-        return AssignmentNode(varNode, newVal, assignment_operator)
 
     def parseBinaryExpression(self, parentPrecedence=0):
         unaryPrecedence = getUnaryPrecedence(self.cur())
@@ -176,8 +176,16 @@ class Parser:
         if cur.isInstance(TokenTypes.OpenParan):
             return self.parseParanExpression()
 
-        if cur.isInstance(TokenTypes.Boolean, TokenTypes.Number, TokenTypes.Variable):
+        if cur.isInstance(
+            TokenTypes.Boolean,
+            TokenTypes.Number,
+            TokenTypes.Variable,
+            TokenTypes.String,
+        ):
             return self.parseGeneralExpression(cur.token_type)
+
+        self.errorBag.unexpectedToken(cur, cur.text_span)
+        self.index += 1
 
     def parseParanExpression(self):
         self.match(TokenTypes.OpenParan)

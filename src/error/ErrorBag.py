@@ -52,6 +52,9 @@ class ErrorBag:
             )
         )
 
+    def unexpectedToken(self, token, text_span):
+        self.report(Error(f"UnexpectedToken: {token}", text_span))
+
     def typeError(self, typeGotten, expectedType, text_span):
         self.report(
             Error(

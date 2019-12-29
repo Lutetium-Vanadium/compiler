@@ -4,10 +4,13 @@ from token_handling.TokenValue import TokenValue
 
 
 class Token:
-    def __init__(self, value, token_type, start):
+    def __init__(self, value, token_type, start, length=None):
         self.token_type = token_type
         self.token_value = TokenValue(value, token_type)
-        self.text_span = TextSpan(start, len(str(value)))
+        if length == None:
+            self.text_span = TextSpan(start, len(str(value)))
+        else:
+            self.text_span = TextSpan(start, length)
 
     def __repr__(self):
         return f"Value: '{self.token_value.value}', Type: {self.token_type}"

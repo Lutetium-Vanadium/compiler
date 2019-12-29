@@ -3,12 +3,9 @@ from token_handling.TokenTypes import TokenTypes
 
 
 class ExpressionNode(Node):
-    def __init__(self, token, value=None):
-        if value == None:
-            value = token.token_value.value
-
+    def __init__(self, token):
         self.token_type = token.token_type
-        self.value = value
+        self.value = token.token_value.value
         self.type = token.token_value.type
         self.text_span = token.text_span
 

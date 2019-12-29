@@ -10,7 +10,7 @@ from syntax_tree.UnaryNode import UnaryOperatorNode
 from error.ErrorBag import ErrorBag
 from token_handling.TokenTypes import TokenTypes
 from type_handling.Types import Types
-from type_handling.helperFunctions import getBinaryOperatorTypes, getUnaryOperatorTypes
+from type_handling.helperFunctions import getUnaryOperatorTypes, checkBinaryType
 
 from variables.Variable import getStatsFromDeclarationKeyword
 from variables.Scope import Scope
@@ -116,28 +116,10 @@ class Binder:
         left = self.bindExpression(node.left)
         operator = node.operatorToken
         right = self.bindExpression(node.right)
-        operandType, resultType = getBinaryOperatorTypes(operator)
 
-        if operandType == Types.Int and (
-            left.type == Types.Float or right.type == Types.Float
-        ):
-            if resultType == Types.Int:
-                resultType = Types.Float
-            operandType = Types.Float
-
-        if (
-            left.type != operandType
-            and operandType == Types.Float
-            and left.type != Types.Int
-        ):
-            self.errorBag.typeError(left.type, operandType, left.text_span)
-
-        if (
-            right.type != operandType
-            and operandType == Types.Float
-            and right.type != Types.Int
-        ):
-            self.errorBag.typeError(right.type, operandType, right.text_span)
+        resultType, self.errorBag = checkBinaryType(
+            operator, left, right, self.errorBag
+        )
 
         return BoundBinaryExpression(resultType, left, operator, right, node.text_span)
 
@@ -162,13 +144,13 @@ class Binder:
         else:
             elseBlock = None
         return BoundIfStatement(condition, thenBlock, elseBlock, node.text_span)
-    
+
     def bindWhileStatement(self, node):
         condition = self.bindExpression(node.condition)
         if condition.type != Types.Bool:
             self.errorBag.typeError(condition.type, Types.Bool, condition.text_span)
         whileBlock = self.bindExpression(node.whileBlock)
-        
+
         return BoundWhileStatement(condition, whileBlock, node.text_span)
 
     def bindUnaryExpression(self, node):

@@ -5,6 +5,8 @@ from keywords.Keywords import *
 
 OPERATORS = "+-*/%^(){|&<=>!}"
 
+STRING_MARKERS = "\"'`"
+
 
 class Lexer:
     def __init__(self, errorBag):
@@ -32,6 +34,9 @@ class Lexer:
             # A generalized operator type, will be seperated out to the various operators later
             return TokenTypes.Operator
 
+        if char in STRING_MARKERS:
+            return TokenTypes.StringMarker
+
         if char.isdigit() or char == ".":
             return TokenTypes.Number
 
@@ -52,8 +57,8 @@ class Lexer:
             return False, self.list, self.errorBag
         return False, self.list, self.errorBag
 
-    def appendToken(self, word, word_type, start):
-        self.list.append(Token(word, word_type, start))
+    def appendToken(self, word, word_type, start, length=None):
+        self.list.append(Token(word, word_type, start, length))
 
     def split(self):
         while self.index < len(self.text):
@@ -67,6 +72,9 @@ class Lexer:
 
             elif cur_type == TokenTypes.Number:
                 self.lexNumber()
+
+            elif cur_type == TokenTypes.StringMarker:
+                self.lexString()
 
             elif cur_type == TokenTypes.Operator:
                 self.lexOperator()
@@ -101,6 +109,33 @@ class Lexer:
         else:
             num = float(num)
         self.appendToken(num, TokenTypes.Number, start)
+
+    def lexString(self):
+        cur = self.text[self.index]
+        if cur == '"':
+            token = TokenTypes.DoubleQuote
+        elif cur == "'":
+            token = TokenTypes.SingleQuote
+        elif cur == "`":
+            token = TokenTypes.BackTick
+        else:
+            raise Exception(f"Unknown starter, '{cur}'")
+
+        self.index += 1
+
+        start = self.index
+        ignore = False
+        while self.index < len(self.text):
+            if ignore:
+                ignore = False
+            elif self.text[self.index] == "\\":
+                ignore = True
+            elif self.text[self.index] == cur:
+                break
+            self.index += 1
+        string = self.text[start : self.index].replace("\\", "")
+        self.index += 1
+        self.appendToken(string, TokenTypes.String, start - 1, self.index - start + 1)
 
     def lexOperator(self):
         start = self.index
