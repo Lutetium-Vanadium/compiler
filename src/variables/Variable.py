@@ -33,9 +33,6 @@ class Variable:
         self.value = value
         return True
 
-    def evaluate(self):
-        return self.value
-
 
 def getStatsFromDeclarationKeyword(declarationKeyword):
     if declarationKeyword == "const":

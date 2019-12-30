@@ -3,8 +3,10 @@ from enum import Enum, auto, unique
 
 @unique
 class Types(Enum):
-    Int = auto()
-    Float = auto()
-    String = auto()
+    Any = auto()
     Bool = auto()
+    Float = auto()
+    Int = auto()
+    String = auto()
     Unknown = auto()
+    Void = auto()

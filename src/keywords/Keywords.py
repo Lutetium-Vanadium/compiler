@@ -10,7 +10,9 @@ KEYWORDS = (
     "while",
     "for",
     "in",
+    # TODO delete range from keyword, its supposed to be a function
     "range",
+    "return",
 )
 
 DECLARATION_KEYWORDS = (

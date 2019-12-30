@@ -244,5 +244,7 @@ class Lexer:
             return TokenTypes.InKeyword
         elif keyword == "range":
             return TokenTypes.RangeKeyword
+        elif keyword == "return":
+            return TokenTypes.ReturnKeyword
 
         raise Exception(f"Unknown keyword {keyword}")

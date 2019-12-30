@@ -4,9 +4,10 @@ from binder.BoundBlockStatement import BoundBlockStatement
 from binder.BoundDeclarationExpression import BoundDeclarationExpression
 from binder.BoundIfStatement import BoundIfStatement
 from binder.BoundLiteralExpression import BoundLiteralExpression
+from binder.BoundReturnStatement import BoundReturnStatement
+from binder.BoundUnaryExpression import BoundUnaryExpression
 from binder.BoundVariableExpression import BoundVariableExpression
 from binder.BoundWhileStatement import BoundWhileStatement
-from binder.BoundUnaryExpression import BoundUnaryExpression
 
 from token_handling.TokenTypes import TokenTypes
 from type_handling.Types import Types
@@ -16,6 +17,7 @@ class Evaluator:
     def __init__(self, syntaxTree):
         self.syntaxTree = syntaxTree
         self.scope = None
+        self.returnFromBlock = False
 
     def evaluate(self):
         return self.evaluateNode(self.syntaxTree)
@@ -39,6 +41,9 @@ class Evaluator:
         if isinstance(node, BoundLiteralExpression):
             return self.evaluateLiteralExpression(node)
 
+        if isinstance(node, BoundReturnStatement):
+            return self.evaluateReturnStatement(node)
+
         if isinstance(node, BoundVariableExpression):
             return self.evaluateVariableExpression(node)
 
@@ -54,6 +59,9 @@ class Evaluator:
         value = None
         for boundExpression in node.children:
             value = self.evaluateNode(boundExpression)
+            if self.returnFromBlock:
+                self.returnFromBlock = False
+                break
         self.scope = prevScope
         return value
 
@@ -122,6 +130,11 @@ class Evaluator:
 
     def evaluateLiteralExpression(self, node):
         return node.value
+
+    def evaluateReturnStatement(self, node):
+        returnVal = self.evaluateNode(node.to_return)
+        self.returnFromBlock = True
+        return returnVal
 
     def evaluateVariableExpression(self, node):
         success, var = self.scope.tryGetVariable(node.var.name)

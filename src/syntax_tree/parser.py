@@ -6,6 +6,7 @@ from syntax_tree.DeclarationNode import DeclarationNode
 from syntax_tree.ExpressionNode import ExpressionNode
 from syntax_tree.IfStatement import IfStatement
 from syntax_tree.ForStatement import constructForStatement
+from syntax_tree.ReturnStatement import ReturnStatement
 from syntax_tree.WhileStatement import WhileStatement
 from syntax_tree.UnaryNode import *
 from token_handling.Token import *
@@ -84,6 +85,9 @@ class Parser:
         if self.cur().isInstance(TokenTypes.ForKeyword):
             return self.parseForStatement()
 
+        if self.cur().isInstance(TokenTypes.ReturnKeyword):
+            return self.parseReturnStatement()
+
         return self.parseBinaryExpression()
 
     def parseDeclareExpression(self):
@@ -149,6 +153,12 @@ class Parser:
         forBlock = self._parse(TokenTypes.CloseBrace)
 
         return constructForStatement(variable, upperBound, forBlock)
+
+    def parseReturnStatement(self):
+        returnToken = self.match(TokenTypes.ReturnKeyword)
+        to_return = self.parseStatement()
+
+        return ReturnStatement(returnToken, to_return)
 
     def parseBinaryExpression(self, parentPrecedence=0):
         unaryPrecedence = getUnaryPrecedence(self.cur())

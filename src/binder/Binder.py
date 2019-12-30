@@ -4,6 +4,7 @@ from syntax_tree.BlockStatement import BlockStatement
 from syntax_tree.DeclarationNode import DeclarationNode
 from syntax_tree.ExpressionNode import ExpressionNode
 from syntax_tree.IfStatement import IfStatement
+from syntax_tree.ReturnStatement import ReturnStatement
 from syntax_tree.WhileStatement import WhileStatement
 from syntax_tree.UnaryNode import UnaryOperatorNode
 
@@ -25,9 +26,10 @@ from binder.BoundBlockStatement import BoundBlockStatement
 from binder.BoundDeclarationExpression import BoundDeclarationExpression
 from binder.BoundIfStatement import BoundIfStatement
 from binder.BoundLiteralExpression import BoundLiteralExpression
+from binder.BoundReturnStatement import BoundReturnStatement
+from binder.BoundUnaryExpression import BoundUnaryExpression
 from binder.BoundVariableExpression import BoundVariableExpression
 from binder.BoundWhileStatement import BoundWhileStatement
-from binder.BoundUnaryExpression import BoundUnaryExpression
 
 
 class Binder:
@@ -59,6 +61,9 @@ class Binder:
 
         if isinstance(node, IfStatement):
             return self.bindIfStatement(node)
+
+        if isinstance(node, ReturnStatement):
+            return self.bindReturnStatement(node)
 
         if isinstance(node, WhileStatement):
             return self.bindWhileStatement(node)
@@ -150,6 +155,10 @@ class Binder:
         else:
             elseBlock = None
         return BoundIfStatement(condition, thenBlock, elseBlock, node.text_span)
+
+    def bindReturnStatement(self, node):
+        to_return = self.bindExpression(node.to_return)
+        return BoundReturnStatement(to_return, node.text_span)
 
     def bindWhileStatement(self, node):
         condition = self.bindExpression(node.condition)

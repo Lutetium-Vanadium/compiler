@@ -23,6 +23,7 @@ class TokenTypes(Enum):
     ForKeyword = auto()
     InKeyword = auto()
     RangeKeyword = auto()
+    ReturnKeyword = auto()
 
     # General types during lexing
     Operator = auto()
