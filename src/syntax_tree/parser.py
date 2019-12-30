@@ -1,4 +1,4 @@
-from lexer import Lexer
+from syntax_tree.lexer import Lexer
 from syntax_tree.AssignmentNode import AssignmentNode
 from syntax_tree.BinaryNode import *
 from syntax_tree.BlockStatement import BlockStatement
@@ -72,6 +72,8 @@ class Parser:
                 2
             ).isInstance(TokenTypes.AssignmentOperator):
                 return self.parseCalculateAssignmentExpression()
+            elif self.peek(1).isInstance(TokenTypes.OpenParan):
+                return self.parseFunctionExpression()
 
         if self.cur().isInstance(TokenTypes.IfKeyword):
             return self.parseIfStatement()
@@ -103,6 +105,15 @@ class Parser:
         right = self.parseStatement()
         newVal = BinaryOperatorNode(varNode, right, operator)
         return AssignmentNode(varNode, newVal, assignment_operator)
+
+    def parseFunctionExpression(self):
+        funcName = self.match(TokenTypes.Variable)
+        openParan = self.match(TokenTypes.OpenParan)
+        params = []
+        while not self.cur().isInstance(TokenTypes.CloseParan):
+            params.append(self.parseStatement())
+        closeParan = self.match(TokenTypes.CloseParan)
+        return FunctionNode(funcName, params)
 
     def parseIfStatement(self):
         ifToken = self.match(TokenTypes.IfKeyword)

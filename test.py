@@ -2,11 +2,11 @@ from unittest import TestCase
 import os, sys
 
 sys.path.append(os.getcwd() + "/src")
-from src.parser import Parser
-from src.Evaluator import Evaluator
-from src.binder.Binder import Binder
-from src.error.ErrorBag import ErrorBag
-from src.variables.Scope import Scope
+from syntax_tree.parser import Parser
+from Evaluator import Evaluator
+from binder.Binder import Binder
+from error.ErrorBag import ErrorBag
+from variables.Scope import Scope
 
 
 def run_multiple_expressions(txt_lst, expected_type="string", returnType="single"):
@@ -112,7 +112,7 @@ class TestOperations(TestCase):
 
         self.assertEqual(run_expression("12 == 12", "bool"), True)
         self.assertEqual(run_expression("12 == 42", "bool"), False)
-    
+
     def test_string(self):
         self.assertEqual(run_expression("'Hello' + 'World'", "string"), "HelloWorld")
         self.assertEqual(run_expression("'Hello' + 23"), "Hello23")

@@ -2,14 +2,14 @@
 import os, sys
 from error.ErrorBag import ErrorBag
 from Evaluator import Evaluator
-from parser import Parser
+from syntax_tree.parser import Parser
 from binder.Binder import Binder
 
 from variables.Scope import Scope
 import readline
 
-parseTree = "parseTree" in sys.argv
-bndTree = "boundTree" in sys.argv
+showParseTree = "parseTree" in sys.argv
+showBoundTree = "boundTree" in sys.argv
 
 
 def cmd_input(prompt, prefill):
@@ -43,7 +43,7 @@ indent = ""
 while True:
     if bash:
         s = "$ "
-    elif parseTree or bndTree:
+    elif showParseTree or showBoundTree:
         if continueToNextLine:
             s = "├·· "
         else:
@@ -66,7 +66,7 @@ while True:
         continue
 
     if expression == "exit":
-        exit()
+        break
     if bash:
         if expression == "repl":
             bash = False
@@ -84,8 +84,8 @@ while True:
         indent = ""
         continue
     if expression == "parseTree":
-        parseTree = not parseTree
-        if parseTree:
+        showParseTree = not showParseTree
+        if showParseTree:
             print("Showing Parsed Tree.")
         else:
             print("Not showing Parsed Tree.")
@@ -93,8 +93,8 @@ while True:
         indent = ""
         continue
     if expression == "boundTree":
-        bndTree = not bndTree
-        if bndTree:
+        showBoundTree = not showBoundTree
+        if showBoundTree:
             print("Showing Bound Tree.")
         else:
             print("Not showing Bound Tree.")
@@ -124,10 +124,10 @@ while True:
     binder = Binder(rootNode, errorBag, globalScope)
     boundTree, globalScope, errorBag = binder.bind()
 
-    if parseTree:
+    if showParseTree:
         rootNode.prt()
         print()
-    if bndTree:
+    if showBoundTree:
         boundTree.prt()
         print()
 
