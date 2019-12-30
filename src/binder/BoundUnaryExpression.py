@@ -18,4 +18,4 @@ class BoundUnaryExpression(BoundNode):
         return [self.operand]
 
     def get_txt(self):
-        return f"BoundUnaryExpression {self.operator.token_value.value} - <{self.type}>"
+        return f"BoundUnaryExpression {self.operator.value} - <{self.type}>"

@@ -5,15 +5,14 @@ from token_handling.TokenTypes import TokenTypes
 class ExpressionNode(Node):
     def __init__(self, token):
         self.token_type = token.token_type
-        self.value = token.token_value.value
-        self.type = token.token_value.type
+        self.value = token.value
         self.text_span = token.text_span
 
     def __repr__(self):
-        return f"Value: [ {self.value} ], Type: [ {self.type} ], Token_Type: [ {self.token_type} ]"
+        return f"Value: [ {self.value} ], Token_Type: [ {self.token_type} ]"
 
     def __repr__(self):
-        return f"Value: [ {self.value} ], Type: [ {self.type} ], Token_Type: [ {self.token_type} ]"
+        return f"Value: [ {self.value} ], Token_Type: [ {self.token_type} ]"
 
     def isInstance(self, *args):
         return self.token_type in args

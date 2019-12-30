@@ -10,7 +10,11 @@ from syntax_tree.UnaryNode import UnaryOperatorNode
 from error.ErrorBag import ErrorBag
 from token_handling.TokenTypes import TokenTypes
 from type_handling.Types import Types
-from type_handling.helperFunctions import getUnaryOperatorTypes, checkBinaryType
+from type_handling.helperFunctions import (
+    getUnaryOperatorTypes,
+    checkBinaryType,
+    getType,
+)
 
 from variables.Variable import getStatsFromDeclarationKeyword
 from variables.Scope import Scope
@@ -132,7 +136,9 @@ class Binder:
 
             return BoundVariableExpression(var, node.text_span)
         else:
-            return BoundLiteralExpression(node.type, node.value, node.text_span)
+            return BoundLiteralExpression(
+                getType(node.value), node.value, node.text_span
+            )
 
     def bindIfStatement(self, node):
         condition = self.bindExpression(node.condition)

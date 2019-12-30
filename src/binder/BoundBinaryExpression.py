@@ -19,6 +19,4 @@ class BoundBinaryExpression(BoundNode):
         return [self.left, self.right]
 
     def get_txt(self):
-        return (
-            f"BoundBinaryExpression {self.operator.token_value.value} - <{self.type}>"
-        )
+        return f"BoundBinaryExpression {self.operator.value} - <{self.type}>"

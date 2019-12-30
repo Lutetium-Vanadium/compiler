@@ -15,6 +15,18 @@ def getUnaryOperatorTypes(operator):
         return Types.Bool, Types.Bool
 
 
+def getType(value):
+    if type(value) == int:
+        return Types.Int
+    if type(value) == float:
+        return Types.Float
+    if type(value) == bool:
+        return Types.Bool
+    if type(value) == str:
+        return Types.String
+    return Types.Unknown
+
+
 def isNumber(arg):
     return arg == Types.Int or arg == Types.Float
 
