@@ -11,7 +11,7 @@ class FunctionNode(Node):
         if len(params) > 0:
             end = params[-1].text_span.end + 1
         else:
-            end = name.text_span.end + 2
+            end = token.text_span.end + 2
         self.text_span = TextSpan(start, end - start)
 
     def __repr__(self):

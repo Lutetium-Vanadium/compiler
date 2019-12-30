@@ -8,6 +8,20 @@ class Scope:
         self.variables = variables
         self.isGlobalScope = parentScope == None
 
+    def __repr__(self):
+        s = "{\n"
+        for k, v in self.variables.items():
+            s += f"    '{k}': [ {v} ],\n"
+        s += "}"
+        return s
+
+    def __str__(self):
+        s = "{\n"
+        for k, v in self.variables.items():
+            s += f"    '{k}': [ {v} ],\n"
+        s += "}"
+        return s
+
     def tryInitialiseVariable(self, varName, varValue, varType, isConst):
         var = Variable(varName, varType, varValue, isConst)
         variable = self.variables.get(varName)

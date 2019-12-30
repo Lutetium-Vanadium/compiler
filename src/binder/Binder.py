@@ -3,6 +3,7 @@ from syntax_tree.BinaryNode import BinaryOperatorNode
 from syntax_tree.BlockStatement import BlockStatement
 from syntax_tree.DeclarationNode import DeclarationNode
 from syntax_tree.ExpressionNode import ExpressionNode
+from syntax_tree.FunctionDeclarationNode import FunctionDeclarationNode
 from syntax_tree.FunctionNode import FunctionNode
 from syntax_tree.IfStatement import IfStatement
 from syntax_tree.ReturnStatement import ReturnStatement
@@ -20,6 +21,7 @@ from type_handling.helperFunctions import (
 
 from variables.Variable import getStatsFromDeclarationKeyword
 from variables.Scope import Scope
+from variables.FunctionVariable import FunctionVariable
 
 from binder.BoundAssignmentExpression import BoundAssignmentExpression
 from binder.BoundBinaryExpression import BoundBinaryExpression
@@ -59,6 +61,9 @@ class Binder:
 
         if isinstance(node, ExpressionNode):
             return self.bindExpressionNode(node)
+
+        if isinstance(node, FunctionDeclarationNode):
+            return self.bindFunctionDeclaration(node)
 
         if isinstance(node, FunctionNode):
             return self.bindFunctionCall(node)
@@ -151,8 +156,25 @@ class Binder:
                 getType(node.value), node.value, node.text_span
             )
 
+    def bindFunctionDeclaration(self, node):
+        varType, _ = getStatsFromDeclarationKeyword(node.declarationKeyword)
+        varName = node.identifier.value
+        varValue = FunctionVariable(
+            varName, varType, node.params, node.functionBody, node.text_span
+        )
+
+        if not self.currentScope.tryInitialiseVariable(
+            varName, varValue, varType, True
+        ):
+            self.errorBag.initialiseError(varName, node.identifier.text_span)
+
+        return BoundDeclarationExpression(
+            node.declarationKeyword, varType, varName, varValue, node.text_span
+        )
+
     def bindFunctionCall(self, node):
-        success, func = self.currentScope.tryGetVariable(node.name)
+        success, var = self.currentScope.tryGetVariable(node.name)
+        func = var.value
         if not success:
             self.errorBag.nameError(node.name, node.text_span)
             return BoundLiteralExpression(Types.Unknown, node.name, node.text_span)
