@@ -2,8 +2,8 @@ from binder.BoundNode import BoundNode
 
 
 class BoundBlockStatement(BoundNode):
-    def __init__(self, expressionList, scope, text_span):
-        self.type = expressionList[-1].type
+    def __init__(self, expressionList, scope, block_type, text_span):
+        self.type = block_type
         self.scope = scope
         self.children = expressionList
         self.text_span = text_span

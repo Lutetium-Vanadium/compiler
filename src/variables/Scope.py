@@ -3,9 +3,9 @@ from binder.BoundLiteralExpression import BoundLiteralExpression
 
 
 class Scope:
-    def __init__(self, parentScope=None):
+    def __init__(self, variables={}, parentScope=None):
         self.parentScope = parentScope
-        self.variables = {}
+        self.variables = variables
         self.isGlobalScope = parentScope == None
 
     def tryInitialiseVariable(self, varName, varValue, varType, isConst):

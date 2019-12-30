@@ -76,13 +76,13 @@ class Binder:
         if node == self.root:
             scope = self.globalScope
         else:
-            scope = Scope(prevScope)
+            scope = Scope({}, prevScope)
             self.currentScope = scope
         lst = []
         for expression in node.getChildren():
             lst.append(self.bindExpression(expression))
         self.currentScope = prevScope
-        return BoundBlockStatement(lst, scope, node.text_span)
+        return BoundBlockStatement(lst, scope, Types.Unknown, node.text_span)
 
     def bindDeclarationExpression(self, node):
         varType, isConst = getStatsFromDeclarationKeyword(node.declarationKeyword)
