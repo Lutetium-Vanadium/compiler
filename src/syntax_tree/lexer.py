@@ -3,7 +3,7 @@ from token_handling.TokenTypes import *
 from token_handling.Token import Token
 from keywords.Keywords import *
 
-OPERATORS = "+-*/%^(){|&<=>!}"
+SPECIAL_CHARACTERS = "+-*/%^(){|&<=>!},"
 
 STRING_MARKERS = "\"'`"
 
@@ -30,9 +30,9 @@ class Lexer:
         if char.isalpha():
             return TokenTypes.Text
 
-        if char in OPERATORS:
+        if char in SPECIAL_CHARACTERS:
             # A generalized operator type, will be seperated out to the various operators later
-            return TokenTypes.Operator
+            return TokenTypes.Special
 
         if char in STRING_MARKERS:
             return TokenTypes.StringMarker
@@ -71,12 +71,18 @@ class Lexer:
                 self.lexText()
 
             elif cur_type == TokenTypes.Number:
-                self.lexNumber()
+                if (
+                    self.text[self.index] == "."
+                    and not self.text[self.index + 1].isdigit()
+                ):
+                    self.index += 1
+                else:
+                    self.lexNumber()
 
             elif cur_type == TokenTypes.StringMarker:
                 self.lexString()
 
-            elif cur_type == TokenTypes.Operator:
+            elif cur_type == TokenTypes.Special:
                 self.lexOperator()
 
             else:
@@ -146,6 +152,9 @@ class Lexer:
             nxt = "\0"
         self.index += 1
 
+        if cur == ",":
+            self.appendToken(",", TokenTypes.CommaToken, start)
+            return
         if cur == "+":
             if nxt == "+":
                 self.index += 1
@@ -223,7 +232,7 @@ class Lexer:
             self.appendToken("=", TokenTypes.AssignmentOperator, start)
             return
 
-        raise SyntaxError("Unknown Operator ", cur, nxt, sep="")
+        raise SyntaxError(f"Unknown Operator {cur}{nxt}")
 
     def appendKeyword(self, text, start):
         if text in DECLARATION_KEYWORDS:

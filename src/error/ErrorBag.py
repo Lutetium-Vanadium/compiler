@@ -99,3 +99,16 @@ class ErrorBag:
                 text_span,
             )
         )
+
+    def numParamError(self, functionName, numGotten, numExpected, text_span):
+        if numGotten > numExpected:
+            s = "TooManyArgs:"
+        else:
+            s = "TooFewArgs:"
+        self.report(
+            Error(
+                f"{s} Function '{functionName}' takes {numExpected} arguments, but got {numGotten}",
+                text_span,
+            )
+        )
+

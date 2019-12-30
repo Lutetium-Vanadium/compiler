@@ -25,4 +25,4 @@ class Token:
         return self.value
 
 
-EOF_TOKEN = Token(";", TokenTypes.EOF, -1)
+EOF_TOKEN = Token("\0", TokenTypes.EOF, -1)

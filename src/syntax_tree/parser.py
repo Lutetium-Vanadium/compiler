@@ -6,6 +6,7 @@ from syntax_tree.DeclarationNode import DeclarationNode
 from syntax_tree.ExpressionNode import ExpressionNode
 from syntax_tree.IfStatement import IfStatement
 from syntax_tree.ForStatement import constructForStatement
+from syntax_tree.FunctionNode import FunctionNode
 from syntax_tree.ReturnStatement import ReturnStatement
 from syntax_tree.WhileStatement import WhileStatement
 from syntax_tree.UnaryNode import *
@@ -111,13 +112,17 @@ class Parser:
         return AssignmentNode(varNode, newVal, assignment_operator)
 
     def parseFunctionExpression(self):
-        funcName = self.match(TokenTypes.Variable)
-        openParan = self.match(TokenTypes.OpenParan)
+        funcToken = self.match(TokenTypes.Variable)
+        self.match(TokenTypes.OpenParan)
         params = []
-        while not self.cur().isInstance(TokenTypes.CloseParan):
+        while True:
             params.append(self.parseStatement())
-        closeParan = self.match(TokenTypes.CloseParan)
-        return FunctionNode(funcName, params)
+            if self.cur().isInstance(TokenTypes.CommaToken):
+                self.index += 1
+            else:
+                break
+        self.match(TokenTypes.CloseParan)
+        return FunctionNode(funcToken, params, TokenTypes.Function)
 
     def parseIfStatement(self):
         ifToken = self.match(TokenTypes.IfKeyword)

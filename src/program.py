@@ -6,6 +6,7 @@ from syntax_tree.parser import Parser
 from binder.Binder import Binder
 
 from variables.Scope import Scope
+from variables.functions import functions
 import readline
 
 showParseTree = "parseTree" in sys.argv
@@ -35,7 +36,7 @@ errorBag = ErrorBag()
 parser = Parser(errorBag)
 
 bash = False
-globalScope = Scope()
+globalScope = Scope(functions)
 continueToNextLine = False
 expression = ""
 indent = ""
@@ -124,16 +125,16 @@ while True:
     binder = Binder(rootNode, errorBag, globalScope)
     boundTree, globalScope, errorBag = binder.bind()
 
-    if showParseTree:
-        rootNode.prt()
-        print()
-    if showBoundTree:
-        boundTree.prt()
-        print()
-
     if errorBag.any():
         errorBag.prt()
         errorBag.clear()
     else:
-        evaluator = Evaluator(boundTree)
-        print(evaluator.evaluate())
+        if showParseTree:
+            rootNode.prt()
+            print()
+        if showBoundTree:
+            boundTree.prt()
+            print()
+        else:
+            evaluator = Evaluator(boundTree)
+            print(evaluator.evaluate())

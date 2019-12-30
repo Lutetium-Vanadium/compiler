@@ -8,10 +8,10 @@ class BoundVariableExpression(BoundNode):
         self.text_span = text_span
 
     def __repr__(self):
-        return str(self.var.value)
+        return f"BoundVariable '{self.var}' - <{self.type}>"
 
     def __str__(self):
-        return str(self.var.value)
+        return f"BoundVariable '{self.var}' - <{self.type}>"
 
     def get_txt(self):
         return f"BoundVariable '{self.var}' - <{self.type}>"

@@ -3,6 +3,7 @@ from syntax_tree.BinaryNode import BinaryOperatorNode
 from syntax_tree.BlockStatement import BlockStatement
 from syntax_tree.DeclarationNode import DeclarationNode
 from syntax_tree.ExpressionNode import ExpressionNode
+from syntax_tree.FunctionNode import FunctionNode
 from syntax_tree.IfStatement import IfStatement
 from syntax_tree.ReturnStatement import ReturnStatement
 from syntax_tree.WhileStatement import WhileStatement
@@ -59,6 +60,9 @@ class Binder:
         if isinstance(node, ExpressionNode):
             return self.bindExpressionNode(node)
 
+        if isinstance(node, FunctionNode):
+            return self.bindFunctionCall(node)
+
         if isinstance(node, IfStatement):
             return self.bindIfStatement(node)
 
@@ -71,18 +75,20 @@ class Binder:
         if isinstance(node, UnaryOperatorNode):
             return self.bindUnaryExpression(node)
 
-    def bindBlockStatement(self, node):
+    def bindBlockStatement(
+        self, node, block_type=Types.Unknown, variables={}, functional=False
+    ):
         prevScope = self.currentScope
         if node == self.root:
             scope = self.globalScope
         else:
-            scope = Scope({}, prevScope)
+            scope = Scope(variables, prevScope)
             self.currentScope = scope
         lst = []
         for expression in node.getChildren():
             lst.append(self.bindExpression(expression))
         self.currentScope = prevScope
-        return BoundBlockStatement(lst, scope, Types.Unknown, node.text_span)
+        return BoundBlockStatement(lst, scope, block_type, node.text_span, functional)
 
     def bindDeclarationExpression(self, node):
         varType, isConst = getStatsFromDeclarationKeyword(node.declarationKeyword)
@@ -144,6 +150,30 @@ class Binder:
             return BoundLiteralExpression(
                 getType(node.value), node.value, node.text_span
             )
+
+    def bindFunctionCall(self, node):
+        success, func = self.currentScope.tryGetVariable(node.name)
+        if not success:
+            self.errorBag.nameError(node.name, node.text_span)
+            return BoundLiteralExpression(Types.Unknown, node.name, node.text_span)
+
+        if len(node.params) != len(func.params):
+            self.errorBag.numParamError(
+                node.name, len(node.params), len(func.params), node.text_span
+            )
+
+        params = {}
+        for i in range(len(node.params)):
+            paramVar = func.params[i]
+            param = self.bindExpression(node.params[i])
+            if param.type != func.params[i].type:
+                self.errorBag.typeError(
+                    param.type, func.params[i].type, param.text_span
+                )
+            paramVar.value = param
+            params[paramVar.name] = paramVar
+
+        return self.bindBlockStatement(func.functionBody, func.type, params, True)
 
     def bindIfStatement(self, node):
         condition = self.bindExpression(node.condition)

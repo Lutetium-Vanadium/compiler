@@ -3,16 +3,18 @@ from enum import Enum, auto, unique
 
 @unique
 class TokenTypes(Enum):
-    # Type Constants
-
     # Regular Text
     Whitespace = auto()
     Number = auto()
     Boolean = auto()
     String = auto()
     Variable = auto()
+    Function = auto()
     EOL = auto()
     EOF = auto()
+
+    # Seperators
+    CommaToken = auto()
 
     # Keywords
     Keyword = auto()
@@ -26,7 +28,7 @@ class TokenTypes(Enum):
     ReturnKeyword = auto()
 
     # General types during lexing
-    Operator = auto()
+    Special = auto()
     Text = auto()
     StringMarker = auto()
 
@@ -57,6 +59,7 @@ class TokenTypes(Enum):
     DoubleQuote = auto()  #             "
     BackTick = auto()  #                `
 
+    # Brackets
     OpenParan = auto()  #               (
     CloseParan = auto()  #              )
     OpenBrace = auto()  #               {

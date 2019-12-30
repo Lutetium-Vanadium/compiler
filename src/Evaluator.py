@@ -59,7 +59,7 @@ class Evaluator:
         value = None
         for boundExpression in node.children:
             value = self.evaluateNode(boundExpression)
-            if self.returnFromBlock:
+            if node.functional and self.returnFromBlock:
                 self.returnFromBlock = False
                 break
         self.scope = prevScope
