@@ -1,5 +1,6 @@
 from error.Error import Error
 from printing.print_color import print_color, RED
+from type_handling.Types import Types
 
 
 class ErrorBag:
@@ -56,6 +57,8 @@ class ErrorBag:
         self.report(Error(f"UnexpectedToken: {token}", text_span))
 
     def typeError(self, typeGotten, expectedType, text_span):
+        if typeGotten == Types.Unknown or expectedType == Types.Unknown:
+            return
         self.report(
             Error(
                 f"TypeError: Expected type <{expectedType}>, got type <{typeGotten}>",
@@ -64,6 +67,8 @@ class ErrorBag:
         )
 
     def assignmentTypeError(self, typeGotten, expectedType, text_span):
+        if typeGotten == Types.Unknown or expectedType == Types.Unknown:
+            return
         self.report(
             Error(
                 f"TypeError: '{typeGotten}' cannot be assigned to variable of type '{typeGotten}'",
