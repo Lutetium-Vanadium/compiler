@@ -14,16 +14,16 @@ class FunctionDeclarationNode(Node):
         self.text_span = TextSpan(start, end - start)
 
     def __repr__(self):
-        return f"Function: [ {self.name} ], Params: {self.params}"
+        return f"Function: [ {self.identifier.value} ], Params: {self.params}"
 
     def __repr__(self):
-        return f"Function: [ {self.name} ], Params: {self.params}"
+        return f"Function: [ {self.identifier.value} ], Params: {self.params}"
 
     def isInstance(self, *args):
         return TokenTypes.DeclarationKeyword in args
 
     def getChildren(self):
-        return [*self.params, self.functionBody]
+        return self.params
 
     def get_txt(self):
-        return f"Function: {self.name}"
+        return f"Function: {self.identifier.value}"

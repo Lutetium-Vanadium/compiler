@@ -76,8 +76,6 @@ class Parser:
                 2
             ).isInstance(TokenTypes.AssignmentOperator):
                 return self.parseCalculateAssignmentExpression()
-            elif self.peek(1).isInstance(TokenTypes.OpenParan):
-                return self.parseFunctionExpression()
 
         if self.cur().isInstance(TokenTypes.IfKeyword):
             return self.parseIfStatement()
@@ -139,22 +137,6 @@ class Parser:
         right = self.parseStatement()
         newVal = BinaryOperatorNode(varNode, right, operator)
         return AssignmentNode(varNode, newVal, assignment_operator)
-
-    def parseFunctionExpression(self):
-        funcToken = self.match(TokenTypes.Variable)
-        self.match(TokenTypes.OpenParan)
-        params = []
-        if not self.cur().isInstance(TokenTypes.CloseParan):
-            while not self.cur().isInstance(TokenTypes.EOF):
-                params.append(self.parseStatement())
-                if self.cur().isInstance(TokenTypes.CommaToken):
-                    self.index += 1
-                else:
-                    break
-
-        self.match(TokenTypes.CloseParan)
-
-        return FunctionNode(funcToken, params, TokenTypes.Function)
 
     def parseIfStatement(self):
         ifToken = self.match(TokenTypes.IfKeyword)
@@ -234,6 +216,9 @@ class Parser:
         if cur.isInstance(TokenTypes.OpenParan):
             return self.parseParanExpression()
 
+        if cur.isInstance(TokenTypes.Variable) and self.peek(1).isInstance(TokenTypes.OpenParan):
+            return self.parseFunctionExpression()
+
         if cur.isInstance(
             TokenTypes.Boolean,
             TokenTypes.Number,
@@ -250,6 +235,22 @@ class Parser:
         expression = self.parseStatement()
         self.match(TokenTypes.CloseParan)
         return expression
+
+    def parseFunctionExpression(self):
+        funcToken = self.match(TokenTypes.Variable)
+        self.match(TokenTypes.OpenParan)
+        params = []
+        if not self.cur().isInstance(TokenTypes.CloseParan):
+            while not self.cur().isInstance(TokenTypes.EOF):
+                params.append(self.parseStatement())
+                if self.cur().isInstance(TokenTypes.CommaToken):
+                    self.index += 1
+                else:
+                    break
+
+        self.match(TokenTypes.CloseParan)
+
+        return FunctionNode(funcToken, params, TokenTypes.Function)
 
     def parseGeneralExpression(self, token_type):
         cur = self.match(token_type)

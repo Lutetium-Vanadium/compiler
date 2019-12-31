@@ -26,7 +26,7 @@ class ErrorBag:
             before = self.text[: error.text_span.start]
             cause = self.text[error.text_span.start : error.text_span.end]
             after = self.text[error.text_span.end :]
-            print("   ", before, end="")
+            print(before, end="")
             print_color(cause, fg=RED, end="")
             print(after)
             print_color(error, "\n", fg=RED)

@@ -60,7 +60,7 @@ while True:
         indent = getIndent(new_expression)
         new_expression = new_expression.lstrip()
 
-    expression += new_expression
+    expression += indent + new_expression
 
     if len(expression) == 0:
         print()
@@ -135,6 +135,6 @@ while True:
         if showBoundTree:
             boundTree.prt()
             print()
-        else:
-            evaluator = Evaluator(boundTree)
-            print(evaluator.evaluate())
+
+        evaluator = Evaluator(boundTree)
+        print(evaluator.evaluate())

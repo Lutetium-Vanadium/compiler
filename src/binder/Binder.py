@@ -19,7 +19,7 @@ from type_handling.helperFunctions import (
     getType,
 )
 
-from variables.Variable import getStatsFromDeclarationKeyword
+from variables.Variable import Variable, getStatsFromDeclarationKeyword
 from variables.Scope import Scope
 from variables.FunctionVariable import FunctionVariable
 
@@ -27,6 +27,7 @@ from binder.BoundAssignmentExpression import BoundAssignmentExpression
 from binder.BoundBinaryExpression import BoundBinaryExpression
 from binder.BoundBlockStatement import BoundBlockStatement
 from binder.BoundDeclarationExpression import BoundDeclarationExpression
+from binder.BoundFunctionCall import BoundFunctionCall
 from binder.BoundIfStatement import BoundIfStatement
 from binder.BoundLiteralExpression import BoundLiteralExpression
 from binder.BoundReturnStatement import BoundReturnStatement
@@ -42,6 +43,14 @@ class Binder:
         self.globalScope = globalScope
         self.errorBag = errorBag
         self.currentScope = globalScope
+        self.ignoreVariables = []
+
+    def contains(self, name):
+        for n, t in self.ignoreVariables:
+            if name == n:
+                return n, t
+
+        return None, None
 
     def bind(self):
         return self.bindExpression(self.root), self.globalScope, self.errorBag
@@ -81,18 +90,21 @@ class Binder:
             return self.bindUnaryExpression(node)
 
     def bindBlockStatement(
-        self, node, block_type=Types.Unknown, variables={}, functional=False
+        self, node, block_type=Types.Unknown, ignoreVariables=[], functional=False
     ):
+        self.ignoreVariables.extend(ignoreVariables)
         prevScope = self.currentScope
         if node == self.root:
             scope = self.globalScope
         else:
-            scope = Scope(variables, prevScope)
+            scope = Scope(parentScope=prevScope)
             self.currentScope = scope
         lst = []
         for expression in node.getChildren():
             lst.append(self.bindExpression(expression))
         self.currentScope = prevScope
+        for i in range(len(ignoreVariables)):
+            self.ignoreVariables.pop()
         return BoundBlockStatement(lst, scope, block_type, node.text_span, functional)
 
     def bindDeclarationExpression(self, node):
@@ -147,10 +159,13 @@ class Binder:
         if node.isInstance(TokenTypes.Variable):
             success, var = self.currentScope.tryGetVariable(node.value)
             if not success:
+                name, data_type = self.contains(node.value)
+                if name:
+                    return BoundVariableExpression(name, data_type, node.text_span)
                 self.errorBag.nameError(node.value, node.text_span)
                 return BoundLiteralExpression(Types.Unknown, node.value, node.text_span)
 
-            return BoundVariableExpression(var, node.text_span)
+            return BoundVariableExpression(var.name, var.type, node.text_span)
         else:
             return BoundLiteralExpression(
                 getType(node.value), node.value, node.text_span
@@ -159,22 +174,28 @@ class Binder:
     def bindFunctionDeclaration(self, node):
         varType, _ = getStatsFromDeclarationKeyword(node.declarationKeyword)
         varName = node.identifier.value
-        varValue = FunctionVariable(
-            varName, varType, node.params, node.functionBody, node.text_span
-        )
 
-        if not self.currentScope.tryInitialiseVariable(
-            varName, varValue, varType, True
-        ):
+        var = FunctionVariable(varName, varType, node.params, node.text_span)
+
+        if not self.currentScope.tryAddVariable(varName, var):
             self.errorBag.initialiseError(varName, node.identifier.text_span)
 
+        ignoreVariables = []
+        for i in node.params:
+            ignoreVariables.append((i.name, i.type))
+
+        functionBody = self.bindBlockStatement(
+            node.functionBody, varType, ignoreVariables, True
+        )
+
+        self.currentScope.variables[varName].addBody(functionBody)
+
         return BoundDeclarationExpression(
-            node.declarationKeyword, varType, varName, varValue, node.text_span
+            node.declarationKeyword, varType, varName, functionBody, node.text_span
         )
 
     def bindFunctionCall(self, node):
-        success, var = self.currentScope.tryGetVariable(node.name)
-        func = var.value
+        success, func = self.currentScope.tryGetVariable(node.name)
         if not success:
             self.errorBag.nameError(node.name, node.text_span)
             return BoundLiteralExpression(Types.Unknown, node.name, node.text_span)
@@ -186,16 +207,16 @@ class Binder:
 
         params = {}
         for i in range(len(node.params)):
-            paramVar = func.params[i]
+            funcParam = func.params[i]
             param = self.bindExpression(node.params[i])
-            if param.type != func.params[i].type:
-                self.errorBag.typeError(
-                    param.type, func.params[i].type, param.text_span
-                )
-            paramVar.value = param
-            params[paramVar.name] = paramVar
+            if param.type != funcParam.type:
+                self.errorBag.typeError(param.type, funcParam.type, param.text_span)
+            var = Variable(funcParam.name, param.type, param)
+            params[funcParam.name] = var
 
-        return self.bindBlockStatement(func.functionBody, func.type, params, True)
+        return BoundFunctionCall(func.name, params, func.type, node.text_span)
+        # funcVar = BoundVariableExpression(func.name, func.type, node.text_span)
+        # return BoundBlockStatement([funcVar], scope, func.type, node.text_span)
 
     def bindIfStatement(self, node):
         condition = self.bindExpression(node.condition)

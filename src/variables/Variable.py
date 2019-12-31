@@ -7,12 +7,13 @@ class Variable:
         self.type = data_type
         self.value = value
         self.isConst = isConst
+        self.isFunction = False
 
     def __repr__(self):
-        return str(self.value)
+        return self.name
 
     def __str__(self):
-        return str(self.value)
+        return self.name
 
     def setType(self, value):
         if type(value) == int:
@@ -32,6 +33,12 @@ class Variable:
 
         self.value = value
         return True
+
+    def getChildren(self):
+        return []
+
+
+nullVariable = Variable("null", Types.Unknown)
 
 
 def getStatsFromDeclarationKeyword(declarationKeyword):

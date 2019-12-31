@@ -12,12 +12,12 @@ class BoundBlockStatement(BoundNode):
     def __repr__(self):
         if self.functional:
             return f"BoundFunctionStatement => <{self.type}>"
-        return f"BlockStatement: <{self.type}>"
+        return f"BoundBlockStatement: <{self.type}>"
 
     def __repr__(self):
         if self.functional:
-            return f"BoundFunctionStatement => <{self.type}>"
-        return f"BlockStatement: <{self.type}>"
+            return f"BoundFunctionBlock => <{self.type}>"
+        return f"BoundBlockStatement: <{self.type}>"
 
     def get_txt(self):
         return self.__str__()

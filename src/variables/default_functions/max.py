@@ -1,32 +1,39 @@
 from variables.FunctionVariable import FunctionVariable
 from variables.Variable import Variable
-from variables.default_functions.default_tokens import ifToken, GTToken, returnToken
-
-from syntax_tree.BinaryNode import BinaryOperatorNode
-from syntax_tree.BlockStatement import BlockStatement
-from syntax_tree.ExpressionNode import ExpressionNode
-from syntax_tree.IfStatement import IfStatement
-from syntax_tree.ReturnStatement import ReturnStatement
+from variables.Scope import Scope
+from variables.default_functions.default_tokens import GTToken, textSpan
+from binder.BoundBinaryExpression import BoundBinaryExpression
+from binder.BoundBlockStatement import BoundBlockStatement
+from binder.BoundLiteralExpression import BoundLiteralExpression
+from binder.BoundIfStatement import BoundIfStatement
+from binder.BoundReturnStatement import BoundReturnStatement
+from binder.BoundVariableExpression import BoundVariableExpression
 
 from type_handling.Types import Types
-from token_handling.Token import Token
-from token_handling.TokenTypes import TokenTypes
 
-name = "min"
+name = "max"
 data_type = Types.Int
 params = [Variable("a", Types.Int), Variable("b", Types.Int)]
 
-paramA = ExpressionNode(Token("a", TokenTypes.Variable, -1))
-paramB = ExpressionNode(Token("b", TokenTypes.Variable, -1))
+functionScope = Scope({"a": params[0], "b": params[1]})
+
+paramA = BoundVariableExpression("a", data_type, textSpan)
+paramB = BoundVariableExpression("b", data_type, textSpan)
 # If statement
-condition = BinaryOperatorNode(paramA, paramB, GTToken)
+condition = BoundBinaryExpression(Types.Bool, paramA, GTToken, paramB, textSpan)
 
-returnA = ReturnStatement(returnToken, paramA)
-thenBlock = BlockStatement([returnA])
+returnA = BoundReturnStatement(paramA, textSpan)
+thenScope = Scope(parentScope=functionScope)
+thenBlock = BoundBlockStatement([returnA], thenScope, data_type, textSpan)
 
-returnB = ReturnStatement(returnToken, paramB)
-elseBlock = BlockStatement([returnB])
+returnB = BoundReturnStatement(paramB, textSpan)
+elseScope = Scope(parentScope=functionScope)
+elseBlock = BoundBlockStatement([returnB], elseScope, data_type, textSpan)
 
-ifStatement = IfStatement(ifToken, condition, thenBlock, elseBlock)
+ifStatement = BoundIfStatement(condition, thenBlock, elseBlock, textSpan)
 
-max_func = FunctionVariable(name, Types.Int, params, BlockStatement([ifStatement]))
+functionBody = BoundBlockStatement(
+    [ifStatement], functionScope, data_type, textSpan, True
+)
+max_func = FunctionVariable(name, data_type, params)
+max_func.addBody(functionBody)
