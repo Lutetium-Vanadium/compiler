@@ -4,6 +4,7 @@ from error.ErrorBag import ErrorBag
 from Evaluator import Evaluator
 from syntax_tree.parser import Parser
 from binder.Binder import Binder
+from variables.default_functions import defaultFunctions
 
 from variables.Scope import Scope
 import readline
@@ -36,6 +37,7 @@ parser = Parser(errorBag)
 
 bash = False
 globalScope = Scope()
+globalScope.addRange(defaultFunctions)
 continueToNextLine = False
 expression = ""
 indent = ""
