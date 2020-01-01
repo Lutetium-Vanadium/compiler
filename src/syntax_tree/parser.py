@@ -6,6 +6,7 @@ from syntax_tree.DeclarationNode import DeclarationNode
 from syntax_tree.ExpressionNode import ExpressionNode
 from syntax_tree.IfStatement import IfStatement
 from syntax_tree.ForStatement import constructForStatement
+from syntax_tree.FunctionCallNode import FunctionCallNode
 from syntax_tree.ReturnStatement import ReturnStatement
 from syntax_tree.WhileStatement import WhileStatement
 from syntax_tree.UnaryNode import *
@@ -73,8 +74,6 @@ class Parser:
                 2
             ).isInstance(TokenTypes.AssignmentOperator):
                 return self.parseCalculateAssignmentExpression()
-            elif self.peek(1).isInstance(TokenTypes.OpenParan):
-                return self.parseFunctionExpression()
 
         if self.cur().isInstance(TokenTypes.IfKeyword):
             return self.parseIfStatement()
@@ -111,13 +110,20 @@ class Parser:
         return AssignmentNode(varNode, newVal, assignment_operator)
 
     def parseFunctionExpression(self):
-        funcName = self.match(TokenTypes.Variable)
-        openParan = self.match(TokenTypes.OpenParan)
+        funcToken = self.match(TokenTypes.Variable)
+        self.match(TokenTypes.OpenParan)
         params = []
-        while not self.cur().isInstance(TokenTypes.CloseParan):
-            params.append(self.parseStatement())
-        closeParan = self.match(TokenTypes.CloseParan)
-        return FunctionNode(funcName, params)
+        if not self.cur().isInstance(TokenTypes.CloseParan):
+            while not self.cur().isInstance(TokenTypes.EOF):
+                params.append(self.parseStatement())
+                if self.cur().isInstance(TokenTypes.CommaToken):
+                    self.index += 1
+                else:
+                    break
+
+        self.match(TokenTypes.CloseParan)
+
+        return FunctionCallNode(funcToken, tuple(params), TokenTypes.Function)
 
     def parseIfStatement(self):
         ifToken = self.match(TokenTypes.IfKeyword)
@@ -196,6 +202,11 @@ class Parser:
 
         if cur.isInstance(TokenTypes.OpenParan):
             return self.parseParanExpression()
+
+        if cur.isInstance(TokenTypes.Variable) and self.peek(1).isInstance(
+            TokenTypes.OpenParan
+        ):
+            return self.parseFunctionExpression()
 
         if cur.isInstance(
             TokenTypes.Boolean,

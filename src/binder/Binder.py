@@ -1,35 +1,36 @@
-from syntax_tree.AssignmentNode import AssignmentNode
-from syntax_tree.BinaryNode import BinaryOperatorNode
-from syntax_tree.BlockStatement import BlockStatement
-from syntax_tree.DeclarationNode import DeclarationNode
-from syntax_tree.ExpressionNode import ExpressionNode
-from syntax_tree.IfStatement import IfStatement
-from syntax_tree.ReturnStatement import ReturnStatement
-from syntax_tree.WhileStatement import WhileStatement
-from syntax_tree.UnaryNode import UnaryOperatorNode
-
-from error.ErrorBag import ErrorBag
-from token_handling.TokenTypes import TokenTypes
-from type_handling.Types import Types
-from type_handling.helperFunctions import (
-    getUnaryOperatorTypes,
-    checkBinaryType,
-    getType,
-)
-
-from variables.Variable import getStatsFromDeclarationKeyword
-from variables.Scope import Scope
-
 from binder.BoundAssignmentExpression import BoundAssignmentExpression
 from binder.BoundBinaryExpression import BoundBinaryExpression
 from binder.BoundBlockStatement import BoundBlockStatement
 from binder.BoundDeclarationExpression import BoundDeclarationExpression
+from binder.BoundFunctionCall import BoundFunctionCall
 from binder.BoundIfStatement import BoundIfStatement
 from binder.BoundLiteralExpression import BoundLiteralExpression
 from binder.BoundReturnStatement import BoundReturnStatement
 from binder.BoundUnaryExpression import BoundUnaryExpression
 from binder.BoundVariableExpression import BoundVariableExpression
 from binder.BoundWhileStatement import BoundWhileStatement
+
+from syntax_tree.AssignmentNode import AssignmentNode
+from syntax_tree.BinaryNode import BinaryOperatorNode
+from syntax_tree.BlockStatement import BlockStatement
+from syntax_tree.DeclarationNode import DeclarationNode
+from syntax_tree.ExpressionNode import ExpressionNode
+from syntax_tree.FunctionCallNode import FunctionCallNode
+from syntax_tree.IfStatement import IfStatement
+from syntax_tree.ReturnStatement import ReturnStatement
+from syntax_tree.UnaryNode import UnaryOperatorNode
+from syntax_tree.WhileStatement import WhileStatement
+from token_handling.TokenTypes import TokenTypes
+from type_handling.helperFunctions import (
+    checkBinaryType,
+    getType,
+    getUnaryOperatorTypes,
+)
+
+from error.ErrorBag import ErrorBag
+from type_handling.Types import Types
+from variables.Scope import Scope
+from variables.Variable import getStatsFromDeclarationKeyword
 
 
 class Binder:
@@ -59,6 +60,9 @@ class Binder:
         if isinstance(node, ExpressionNode):
             return self.bindExpressionNode(node)
 
+        if isinstance(node, FunctionCallNode):
+            return self.bindFunctionCall(node)
+
         if isinstance(node, IfStatement):
             return self.bindIfStatement(node)
 
@@ -76,7 +80,7 @@ class Binder:
         if node == self.root:
             scope = self.globalScope
         else:
-            scope = Scope({}, prevScope)
+            scope = Scope(prevScope)
             self.currentScope = scope
         lst = []
         for expression in node.getChildren():
@@ -144,6 +148,24 @@ class Binder:
             return BoundLiteralExpression(
                 getType(node.value), node.value, node.text_span
             )
+
+    def bindFunctionCall(self, node):
+        success, func = self.currentScope.tryGetVariable(node.name)
+        if not success:
+            self.errorBag.nameError(node.name, node.text_span)
+            return BoundLiteralExpression(Types.Unknown, node.name, node.text_span)
+
+        params = []
+        for i in range(len(node.params)):
+            paramVar = func.params[i]
+            param = self.bindExpression(node.params[i])
+            if param.type != func.params[i].type:
+                self.errorBag.typeError(
+                    param.type, func.params[i].type, param.text_span
+                )
+            params.append(param)
+
+        return BoundFunctionCall(func.name, tuple(params), func.type, node.text_span)
 
     def bindIfStatement(self, node):
         condition = self.bindExpression(node.condition)

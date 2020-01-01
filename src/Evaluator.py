@@ -2,6 +2,7 @@ from binder.BoundAssignmentExpression import BoundAssignmentExpression
 from binder.BoundBinaryExpression import BoundBinaryExpression
 from binder.BoundBlockStatement import BoundBlockStatement
 from binder.BoundDeclarationExpression import BoundDeclarationExpression
+from binder.BoundFunctionCall import BoundFunctionCall
 from binder.BoundIfStatement import BoundIfStatement
 from binder.BoundLiteralExpression import BoundLiteralExpression
 from binder.BoundReturnStatement import BoundReturnStatement
@@ -34,6 +35,9 @@ class Evaluator:
 
         if isinstance(node, BoundDeclarationExpression):
             return self.evaluateDeclarationExpression(node)
+
+        if isinstance(node, BoundFunctionCall):
+            return self.evaluateFunctionCall(node)
 
         if isinstance(node, BoundIfStatement):
             return self.evaluateIfCondition(node)
@@ -121,6 +125,22 @@ class Evaluator:
 
         return self.scope.tryGetVariable(node.varName)[1]
 
+    def evaluateFunctionCall(self, node):
+        success, func = self.scope.tryGetVariable(node.name)
+        if not success:
+            # All non declared variables should be taken care of in the binder
+            raise NameError(f"Variable {node.var.name} doesn't exist.")
+
+        params = []
+        for i in range(len(func.params)):
+            param = func.params[i].copy()
+            param.value = node.paramValues[i]
+            params.append(param)
+
+        func.functionBody.addVariables(params)
+
+        return self.evaluateNode(func.functionBody)
+
     def evaluateIfCondition(self, node):
         isTrue = self.evaluateNode(node.condition)
         if isTrue:
@@ -138,11 +158,11 @@ class Evaluator:
 
     def evaluateVariableExpression(self, node):
         success, var = self.scope.tryGetVariable(node.var.name)
-        if success:
-            return self.evaluateNode(var.value)
+        if not success:
+            # All non declared variables should be taken care of in the binder
+            raise NameError(f"Variable {node.var.name} doesn't exist.")
 
-        # All non declared variables should be taken care of in the binder
-        raise NameError(f"Variable {node.var.name} doesn't exist.")
+        return self.evaluateNode(var.value)
 
     def evaluateWhileStatement(self, node):
         value = None

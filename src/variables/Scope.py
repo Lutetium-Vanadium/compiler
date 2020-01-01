@@ -3,19 +3,29 @@ from binder.BoundLiteralExpression import BoundLiteralExpression
 
 
 class Scope:
-    def __init__(self, variables={}, parentScope=None):
+    def __init__(self, parentScope=None):
         self.parentScope = parentScope
-        self.variables = variables
+        self.variables = {}
         self.isGlobalScope = parentScope == None
 
-    def tryInitialiseVariable(self, varName, varValue, varType, isConst):
-        var = Variable(varName, varType, varValue, isConst)
+    def addRange(self, *args):
+        for dct in args:
+            self.variables.update(dct)
+
+    def addOrReplace(self, var, varName):
+        self.variables[varName] = var
+
+    def tryAddVariable(self, var, varName):
         variable = self.variables.get(varName)
         if variable:
             return False
 
         self.variables[varName] = var
         return True
+
+    def tryInitialiseVariable(self, varName, varValue, varType, isConst):
+        var = Variable(varName, varType, varValue, isConst)
+        return self.tryAddVariable(var, varName)
 
     def tryGetVariable(self, varName):
         variable = self.variables.get(varName)

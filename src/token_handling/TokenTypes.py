@@ -11,6 +11,7 @@ class TokenTypes(Enum):
     Boolean = auto()
     String = auto()
     Variable = auto()
+    Function = auto()
     EOL = auto()
     EOF = auto()
 
@@ -24,6 +25,9 @@ class TokenTypes(Enum):
     InKeyword = auto()
     RangeKeyword = auto()
     ReturnKeyword = auto()
+
+    # Seperators
+    CommaToken = auto()
 
     # General types during lexing
     Operator = auto()

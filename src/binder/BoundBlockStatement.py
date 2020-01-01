@@ -14,6 +14,10 @@ class BoundBlockStatement(BoundNode):
     def __repr__(self):
         return f"BlockStatement: <{self.type}>"
 
+    def addVariables(self, lst):
+        for arg in lst:
+            self.scope.addOrReplace(arg, arg.name)
+
     def get_txt(self):
         return self.__str__()
 

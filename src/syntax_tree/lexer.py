@@ -3,7 +3,7 @@ from token_handling.TokenTypes import *
 from token_handling.Token import Token
 from keywords.Keywords import *
 
-OPERATORS = "+-*/%^(){|&<=>!}"
+OPERATORS = "+-*/%^(){|&<=>!},"
 
 STRING_MARKERS = "\"'`"
 
@@ -70,7 +70,10 @@ class Lexer:
             elif cur_type == TokenTypes.Text:
                 self.lexText()
 
-            elif cur_type == TokenTypes.Number:
+            elif cur_type == TokenTypes.Number and self.text[self.index] != ".":
+                self.lexNumber()
+
+            elif cur_type == TokenTypes.Number and self.text[self.index + 1].isdigit():
                 self.lexNumber()
 
             elif cur_type == TokenTypes.StringMarker:
@@ -146,6 +149,9 @@ class Lexer:
             nxt = "\0"
         self.index += 1
 
+        if cur == ",":
+            self.appendToken(",", TokenTypes.CommaToken, start)
+            return
         if cur == "+":
             if nxt == "+":
                 self.index += 1
@@ -153,69 +159,69 @@ class Lexer:
                 return
             self.appendToken("+", TokenTypes.PlusOperator, start)
             return
-        elif cur == "-":
+        if cur == "-":
             if nxt == "-":
                 self.index += 1
                 self.appendToken("--", TokenTypes.MinusMinusOperator, start)
                 return
             self.appendToken("-", TokenTypes.MinusOperator, start)
             return
-        elif cur == "*":
+        if cur == "*":
             self.appendToken("*", TokenTypes.StarOperator, start)
             return
-        elif cur == "/":
+        if cur == "/":
             self.appendToken("/", TokenTypes.SlashOperator, start)
             return
-        elif cur == "%":
+        if cur == "%":
             self.appendToken("%", TokenTypes.ModOperator, start)
             return
-        elif cur == "^":
+        if cur == "^":
             self.appendToken("^", TokenTypes.CaretOperator, start)
             return
-        elif cur == "(":
+        if cur == "(":
             self.appendToken("(", TokenTypes.OpenParan, start)
             return
-        elif cur == ")":
+        if cur == ")":
             self.appendToken(")", TokenTypes.CloseParan, start)
             return
-        elif cur == "{":
+        if cur == "{":
             self.openBrace += 1
             self.appendToken("{", TokenTypes.OpenBrace, start)
             return
-        elif cur == "}":
+        if cur == "}":
             self.closeBrace += 1
             self.appendToken("}", TokenTypes.CloseBrace, start)
             return
-        elif cur == nxt == "|":
+        if cur == nxt == "|":
             self.index += 1
             self.appendToken("||", TokenTypes.OrOperator, start)
             return
-        elif cur == nxt == "&":
+        if cur == nxt == "&":
             self.index += 1
             self.appendToken("&&", TokenTypes.AndOperator, start)
             return
-        elif cur == "!":
+        if cur == "!":
             if nxt == "=":
                 self.index += 1
                 self.appendToken("!=", TokenTypes.NEOperator, start)
                 return
             self.appendToken("!", TokenTypes.NotOperator, start)
             return
-        elif cur == ">":
+        if cur == ">":
             if nxt == "=":
                 self.index += 1
                 self.appendToken(">=", TokenTypes.GEOperator, start)
                 return
             self.appendToken(">", TokenTypes.GTOperator, start)
             return
-        elif cur == "<":
+        if cur == "<":
             if nxt == "=":
                 self.index += 1
                 self.appendToken("<=", TokenTypes.LEOperator, start)
                 return
             self.appendToken("<", TokenTypes.LTOperator, start)
             return
-        elif cur == "=":
+        if cur == "=":
             if nxt == "=":
                 self.index += 1
                 self.appendToken("==", TokenTypes.EEOperator, start)

@@ -14,6 +14,9 @@ class Variable:
     def __str__(self):
         return str(self.value)
 
+    def copy(self):
+        return Variable(self.name, self.type, self.value, self.isConst)
+
     def setType(self, value):
         if type(value) == int:
             self.type = Types.Int
