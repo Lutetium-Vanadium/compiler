@@ -2,9 +2,10 @@ from unittest import TestCase
 import os, sys
 
 sys.path.append(os.getcwd() + "/src")
+sys.path.append(os.getcwd())
 sys.path.append("/".join(os.getcwd().split("/")[:-1]))
 sys.path.append("/".join(os.getcwd().split("/")[:-1]) + "/src")
-
+print(sys.path)
 from tests.helpers import *
 
 
@@ -24,3 +25,22 @@ class TestFunctions(TestCase):
             run_expression("max(max(125143, 129132), 123153)", "int"), 129132
         )
 
+    def test_made(self):
+        to_test = ["int a() { return 13213 }", "a()"]
+        self.assertEqual(run_multiple_expressions(to_test), "13213")
+
+        to_test = ["int add(int a, int b) { return a + b }", "add(123, 435)"]
+        self.assertEqual(run_multiple_expressions(to_test), "558")
+
+        to_test = [
+            """\
+int f(int a) {
+    if a == 2 {
+        return a
+    }
+    return a * f(a-1)
+}\
+        """,
+            "f(5)",
+        ]
+        self.assertEqual(run_multiple_expressions(to_test), "120")
