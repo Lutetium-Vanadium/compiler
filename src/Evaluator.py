@@ -24,6 +24,9 @@ class Evaluator:
         return self.evaluateNode(self.syntaxTree)
 
     def evaluateNode(self, node):
+        if isinstance(node, BoundDeclarationExpression):
+            return self.evaluateDeclarationExpression(node)
+
         if isinstance(node, BoundBlockStatement):
             return self.evaluateBlockStatement(node)
 
@@ -32,9 +35,6 @@ class Evaluator:
 
         if isinstance(node, BoundBinaryExpression):
             return self.evaluateBinaryExpression(node)
-
-        if isinstance(node, BoundDeclarationExpression):
-            return self.evaluateDeclarationExpression(node)
 
         if isinstance(node, BoundFunctionCall):
             return self.evaluateFunctionCall(node)
@@ -64,7 +64,8 @@ class Evaluator:
         for boundExpression in node.children:
             value = self.evaluateNode(boundExpression)
             if self.returnFromBlock:
-                self.returnFromBlock = False
+                if node.isFunction:
+                    self.returnFromBlock = False
                 break
         self.scope = prevScope
         return value
@@ -134,12 +135,16 @@ class Evaluator:
         params = []
         for i in range(len(func.params)):
             param = func.params[i].copy()
-            param.value = node.paramValues[i]
+            value = self.evaluateNode(node.paramValues[i])
+            param.value = BoundLiteralExpression(
+                Types.Int, value, node.paramValues[i].text_span
+            )
             params.append(param)
 
-        func.functionBody.addVariables(params)
+        functionBody = func.functionBody.copy()
+        functionBody.addVariables(params)
 
-        return self.evaluateNode(func.functionBody)
+        return self.evaluateNode(functionBody)
 
     def evaluateIfCondition(self, node):
         isTrue = self.evaluateNode(node.condition)

@@ -16,6 +16,7 @@ from syntax_tree.BlockStatement import BlockStatement
 from syntax_tree.DeclarationNode import DeclarationNode
 from syntax_tree.ExpressionNode import ExpressionNode
 from syntax_tree.FunctionCallNode import FunctionCallNode
+from syntax_tree.FunctionDeclarationNode import FunctionDeclarationNode
 from syntax_tree.IfStatement import IfStatement
 from syntax_tree.ReturnStatement import ReturnStatement
 from syntax_tree.UnaryNode import UnaryOperatorNode
@@ -29,6 +30,7 @@ from type_handling.helperFunctions import (
 
 from error.ErrorBag import ErrorBag
 from type_handling.Types import Types
+from variables.FunctionVariable import FunctionVariable
 from variables.Scope import Scope
 from variables.Variable import getStatsFromDeclarationKeyword
 
@@ -63,6 +65,9 @@ class Binder:
         if isinstance(node, FunctionCallNode):
             return self.bindFunctionCall(node)
 
+        if isinstance(node, FunctionDeclarationNode):
+            return self.bindFunctionDeclaration(node)
+
         if isinstance(node, IfStatement):
             return self.bindIfStatement(node)
 
@@ -75,18 +80,22 @@ class Binder:
         if isinstance(node, UnaryOperatorNode):
             return self.bindUnaryExpression(node)
 
-    def bindBlockStatement(self, node):
+    def bindBlockStatement(self, node, variables={}, isFunction=False):
         prevScope = self.currentScope
         if node == self.root:
             scope = self.globalScope
         else:
             scope = Scope(prevScope)
-            self.currentScope = scope
+
+        for var in variables:
+            scope.tryAddVariable(var, var.name)
+
+        self.currentScope = scope
         lst = []
         for expression in node.getChildren():
             lst.append(self.bindExpression(expression))
         self.currentScope = prevScope
-        return BoundBlockStatement(lst, scope, Types.Unknown, node.text_span)
+        return BoundBlockStatement(lst, scope, Types.Unknown, node.text_span, isFunction)
 
     def bindDeclarationExpression(self, node):
         varType, isConst = getStatsFromDeclarationKeyword(node.declarationKeyword)
@@ -166,6 +175,22 @@ class Binder:
             params.append(param)
 
         return BoundFunctionCall(func.name, tuple(params), func.type, node.text_span)
+
+    def bindFunctionDeclaration(self, node):
+        varType, _ = getStatsFromDeclarationKeyword(node.declarationKeyword)
+        varName = node.identifier.value
+        varValue = FunctionVariable(varName, varType, node.params, node.text_span)
+
+        if not self.currentScope.tryAddVariable(varValue, varName):
+            self.errorBag.initialiseError(varName, node.identifier.text_span)
+
+        functionBody = self.bindBlockStatement(node.functionBody, node.params, True)
+
+        varValue.addBody(functionBody)
+
+        return BoundDeclarationExpression(
+            node.declarationKeyword, varType, varName, varValue, node.text_span
+        )
 
     def bindIfStatement(self, node):
         condition = self.bindExpression(node.condition)

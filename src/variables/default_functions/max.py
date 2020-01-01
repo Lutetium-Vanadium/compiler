@@ -26,13 +26,13 @@ paramB = BoundVariableExpression(params[1], textSpan)
 condition = BoundBinaryExpression(Types.Bool, paramA, GTToken, paramB, textSpan)
 
 returnA = BoundReturnStatement(paramA, textSpan)
-thenBlock = BoundBlockStatement([returnA], scope, data_type, textSpan)
+thenBlock = BoundBlockStatement([returnA], scope, data_type, textSpan, False)
 
 returnB = BoundReturnStatement(paramB, textSpan)
-elseBlock = BoundBlockStatement([returnB], scope, data_type, textSpan)
+elseBlock = BoundBlockStatement([returnB], scope, data_type, textSpan, False)
 
 ifStatement = BoundIfStatement(condition, thenBlock, elseBlock, textSpan)
 
-functionBody = BoundBlockStatement([ifStatement], funcScope, data_type, textSpan)
+functionBody = BoundBlockStatement([ifStatement], funcScope, data_type, textSpan, True)
 
 max_func = FunctionVariable(name, data_type, params, functionBody)

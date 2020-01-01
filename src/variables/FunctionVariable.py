@@ -14,3 +14,12 @@ class FunctionVariable:
 
     def __str__(self):
         return self.name
+
+    def addBody(self, functionBody):
+        self.functionBody = functionBody
+
+    def get_txt(self):
+        return f"{self.name} => {self.type}"
+
+    def get_children(self):
+        return []

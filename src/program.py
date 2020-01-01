@@ -126,16 +126,16 @@ while True:
     binder = Binder(rootNode, errorBag, globalScope)
     boundTree, globalScope, errorBag = binder.bind()
 
-    if showParseTree:
-        rootNode.prt()
-        print()
-    if showBoundTree:
-        boundTree.prt()
-        print()
-
     if errorBag.any():
         errorBag.prt()
         errorBag.clear()
     else:
+        if showParseTree:
+            rootNode.prt(rootNode)
+            print()
+        if showBoundTree:
+            boundTree.prt(boundTree)
+            print()
+            
         evaluator = Evaluator(boundTree)
         print(evaluator.evaluate())

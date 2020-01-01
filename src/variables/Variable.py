@@ -36,6 +36,12 @@ class Variable:
         self.value = value
         return True
 
+    def getChildren(self):
+        return []
+
+    def get_text(self):
+        return f"{self.name} [{self.value}] <{self.type}>"
+
 
 def getStatsFromDeclarationKeyword(declarationKeyword):
     if declarationKeyword == "const":
