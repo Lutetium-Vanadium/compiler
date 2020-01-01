@@ -7,7 +7,6 @@ from binder.Binder import Binder
 from variables.default_functions import defaultFunctions
 
 from variables.Scope import Scope
-from variables.functions import functions
 import readline
 
 showParseTree = "parseTree" in sys.argv
@@ -137,6 +136,6 @@ while True:
         if showBoundTree:
             boundTree.prt(boundTree)
             print()
-            
+
         evaluator = Evaluator(boundTree)
         print(evaluator.evaluate())

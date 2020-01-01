@@ -19,8 +19,8 @@ funcScope = Scope()
 
 scope = Scope(funcScope)
 
-paramA = BoundVariableExpression(params[0], data_type, textSpan)
-paramB = BoundVariableExpression(params[1], data_type, textSpan)
+paramA = BoundVariableExpression("a", data_type, textSpan)
+paramB = BoundVariableExpression("b", data_type, textSpan)
 
 # If statement
 condition = BoundBinaryExpression(Types.Bool, paramA, GTToken, paramB, textSpan)
