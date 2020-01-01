@@ -24,6 +24,9 @@ class Evaluator:
         return self.evaluateNode(self.syntaxTree)
 
     def evaluateNode(self, node):
+        if isinstance(node, BoundDeclarationExpression):
+            return self.evaluateDeclarationExpression(node)
+
         if isinstance(node, BoundBlockStatement):
             return self.evaluateBlockStatement(node)
 
@@ -63,8 +66,9 @@ class Evaluator:
         value = None
         for boundExpression in node.children:
             value = self.evaluateNode(boundExpression)
-            if node.functional and self.returnFromBlock:
-                self.returnFromBlock = False
+            if self.returnFromBlock:
+                if node.isFunction:
+                    self.returnFromBlock = False
                 break
         self.scope = prevScope
         return value
@@ -126,13 +130,24 @@ class Evaluator:
         return self.scope.tryGetVariable(node.varName)[1]
 
     def evaluateFunctionCall(self, node):
-        success, var = self.scope.tryGetVariable(node.name)
-        if success:
-            var.functionBody.scope.setVariables(node.params)
-            return self.evaluateNode(var.functionBody)
+        success, func = self.scope.tryGetVariable(node.name)
+        if not success:
+            # All non declared variables should be taken care of in the binder
+            raise NameError(f"Variable {node.name} doesn't exist.")
 
-        # All non declared variables should be taken care of in the binder
-        raise NameError(f"Variable {node.var.name} doesn't exist.")
+        params = []
+        for i in range(len(func.params)):
+            param = func.params[i].copy()
+            value = self.evaluateNode(node.paramValues[i])
+            param.value = BoundLiteralExpression(
+                Types.Int, value, node.paramValues[i].text_span
+            )
+            params.append(param)
+
+        functionBody = func.functionBody.copy()
+        functionBody.addVariables(params)
+
+        return self.evaluateNode(functionBody)
 
     def evaluateIfCondition(self, node):
         isTrue = self.evaluateNode(node.condition)
@@ -151,11 +166,11 @@ class Evaluator:
 
     def evaluateVariableExpression(self, node):
         success, var = self.scope.tryGetVariable(node.name)
-        if success:
-            return self.evaluateNode(var.value)
+        if not success:
+            # All non declared variables should be taken care of in the binder
+            raise NameError(f"Variable {node.name} doesn't exist.")
 
-        # All non declared variables should be taken care of in the binder
-        raise NameError(f"Variable {node.var.name} doesn't exist.")
+        return self.evaluateNode(var.value)
 
     def evaluateWhileStatement(self, node):
         value = None
@@ -172,14 +187,14 @@ class Evaluator:
 
         if node.operator.isInstance(TokenTypes.PlusPlusOperator):
             self.scope.updateValue(
-                node.operand.var.name,
+                node.operand.name,
                 self.evaluateNode(node.operand) + 1,
                 node.operand.text_span,
             )
 
         if node.operator.isInstance(TokenTypes.MinusMinusOperator):
             self.child.updateValue(
-                node.operand.var.name,
+                node.operand.name,
                 self.evaluateNode(node.operand) - 1,
                 node.operand.text_span,
             )

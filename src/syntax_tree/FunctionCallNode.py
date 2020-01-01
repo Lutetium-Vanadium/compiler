@@ -2,7 +2,7 @@ from syntax_tree.Node import Node
 from textSpan import TextSpan
 
 
-class FunctionNode(Node):
+class FunctionCallNode(Node):
     def __init__(self, token, params, token_type):
         self.name = token.value
         self.params = tuple(params)

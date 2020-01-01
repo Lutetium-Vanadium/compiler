@@ -17,10 +17,7 @@ class Node:
     def get_txt(self):
         return self.operatorToken
 
-    def prt(self, node=None, indent="", isLast=True):
-        if node == None:
-            node = self
-
+    def prt(self, node, indent="", isLast=True):
         marker = "└──" if isLast else "├──"
 
         print_color(indent, fg=LIGHT_GRAY, end="")

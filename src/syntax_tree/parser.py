@@ -6,13 +6,16 @@ from syntax_tree.DeclarationNode import DeclarationNode
 from syntax_tree.ExpressionNode import ExpressionNode
 from syntax_tree.IfStatement import IfStatement
 from syntax_tree.ForStatement import constructForStatement
+from syntax_tree.FunctionCallNode import FunctionCallNode
 from syntax_tree.FunctionDeclarationNode import FunctionDeclarationNode
-from syntax_tree.FunctionNode import FunctionNode
 from syntax_tree.ReturnStatement import ReturnStatement
 from syntax_tree.WhileStatement import WhileStatement
 from syntax_tree.UnaryNode import *
+
 from token_handling.Token import *
 from token_handling.TokenTypes import *
+from variables.Variable import Variable, getStatsFromDeclarationKeyword
+
 from variables.Variable import Variable, getStatsFromDeclarationKeyword
 
 
@@ -39,8 +42,10 @@ class Parser:
             return continueToNextLine, None, self.errorBag
         return continueToNextLine, self._parse(), self.errorBag
 
-    def peek(self, offSet):
-        return self.tokenList[self.index + offSet]
+    def peek(self, offset):
+        if self.index + offset >= len(self.tokenList):
+            return self.tokenList[-1]
+        return self.tokenList[self.index + offset]
 
     def cur(self):
         return self.peek(0)
@@ -96,9 +101,18 @@ class Parser:
         if self.peek(1).isInstance(TokenTypes.AssignmentOperator):
             return DeclarationNode(declarationToken, self.parseAssignmentExpression())
 
-        # Function declaration
-        varNode = self.parseGeneralExpression(TokenTypes.Variable)
+        return self.parseFunctionDeclaration(declarationToken)
 
+    def parseAssignmentExpression(self):
+        varNode = self.parseGeneralExpression(TokenTypes.Variable)
+        self.match(TokenTypes.AssignmentOperator)
+
+        right = self.parseStatement()
+
+        return AssignmentNode(varNode, right, TokenTypes.AssignmentOperator)
+
+    def parseFunctionDeclaration(self, declarationToken):
+        varNode = self.parseGeneralExpression(TokenTypes.Variable)
         self.match(TokenTypes.OpenParan)
         params = []
         if not self.cur().isInstance(TokenTypes.CloseParan):
@@ -107,7 +121,7 @@ class Parser:
                 varType = getStatsFromDeclarationKeyword(token.value)[0]
                 if varType == None:
                     self.errorBag.tokenError(
-                        "const, var", "int, bool, float, string", token.text_span
+                        token.value, "int, bool, float, string", token.text_span
                     )
                 var = self.match(TokenTypes.Variable)
                 params.append(Variable(var.value, varType))
@@ -119,16 +133,9 @@ class Parser:
         self.match(TokenTypes.CloseParan)
         self.match(TokenTypes.OpenBrace)
 
-        funcBody = self._parse(TokenTypes.CloseBrace)
-        return FunctionDeclarationNode(declarationToken, varNode, params, funcBody)
+        functionBody = self._parse(TokenTypes.CloseBrace)
 
-    def parseAssignmentExpression(self):
-        varNode = self.parseGeneralExpression(TokenTypes.Variable)
-        self.match(TokenTypes.AssignmentOperator)
-
-        right = self.parseStatement()
-
-        return AssignmentNode(varNode, right, TokenTypes.AssignmentOperator)
+        return FunctionDeclarationNode(declarationToken, varNode, params, functionBody)
 
     def parseCalculateAssignmentExpression(self):
         varNode = self.parseGeneralExpression(TokenTypes.Variable)
@@ -137,6 +144,22 @@ class Parser:
         right = self.parseStatement()
         newVal = BinaryOperatorNode(varNode, right, operator)
         return AssignmentNode(varNode, newVal, assignment_operator)
+
+    def parseFunctionExpression(self):
+        funcToken = self.match(TokenTypes.Variable)
+        self.match(TokenTypes.OpenParan)
+        params = []
+        if not self.cur().isInstance(TokenTypes.CloseParan):
+            while not self.cur().isInstance(TokenTypes.EOF):
+                params.append(self.parseStatement())
+                if self.cur().isInstance(TokenTypes.CommaToken):
+                    self.index += 1
+                else:
+                    break
+
+        self.match(TokenTypes.CloseParan)
+
+        return FunctionCallNode(funcToken, tuple(params), TokenTypes.Function)
 
     def parseIfStatement(self):
         ifToken = self.match(TokenTypes.IfKeyword)
@@ -216,7 +239,9 @@ class Parser:
         if cur.isInstance(TokenTypes.OpenParan):
             return self.parseParanExpression()
 
-        if cur.isInstance(TokenTypes.Variable) and self.peek(1).isInstance(TokenTypes.OpenParan):
+        if cur.isInstance(TokenTypes.Variable) and self.peek(1).isInstance(
+            TokenTypes.OpenParan
+        ):
             return self.parseFunctionExpression()
 
         if cur.isInstance(
@@ -250,7 +275,7 @@ class Parser:
 
         self.match(TokenTypes.CloseParan)
 
-        return FunctionNode(funcToken, params, TokenTypes.Function)
+        return FunctionCallNode(funcToken, params, TokenTypes.Function)
 
     def parseGeneralExpression(self, token_type):
         cur = self.match(token_type)

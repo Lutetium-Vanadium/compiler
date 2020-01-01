@@ -9,10 +9,7 @@ class BoundNode:
     def getLastChild(self):
         return self.get_children()[-1]
 
-    def prt(self, node=None, indent="", isLast=True):
-        if node == None:
-            node = self
-
+    def prt(self, node, indent="", isLast=True):
         marker = "└──" if isLast else "├──"
 
         print_color(indent, fg=LIGHT_GRAY, end="")

@@ -10,10 +10,13 @@ class Variable:
         self.isFunction = False
 
     def __repr__(self):
-        return self.name
+        return str(self.value)
 
     def __str__(self):
-        return self.name
+        return str(self.value)
+
+    def copy(self):
+        return Variable(self.name, self.type, self.value, self.isConst)
 
     def setType(self, value):
         if type(value) == int:
@@ -37,8 +40,8 @@ class Variable:
     def getChildren(self):
         return []
 
-
-nullVariable = Variable("null", Types.Unknown)
+    def get_text(self):
+        return f"{self.name} [{self.value}] <{self.type}>"
 
 
 def getStatsFromDeclarationKeyword(declarationKeyword):
