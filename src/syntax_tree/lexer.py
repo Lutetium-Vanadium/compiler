@@ -126,19 +126,61 @@ class Lexer:
 
         self.index += 1
 
+        templated = cur == "`"
+
+        string = ""
         start = self.index
-        ignore = False
         while self.index < len(self.text):
-            if ignore:
-                ignore = False
-            elif self.text[self.index] == "\\":
-                ignore = True
+            if self.text[self.index] == "\\":
+                self.index += 1
+            elif self.text[self.index] == "{":
+                self.appendToken(string, TokenTypes.String, start - 1)
+                self.appendToken("+", TokenTypes.PlusOperator, self.index)
+                self.appendToken("(", TokenTypes.OpenParan, self.index)
+                self.index += 1
+                self.lexTemplatedLiteral()
+                self.appendToken(")", TokenTypes.CloseParan, self.index)
+                self.appendToken("+", TokenTypes.PlusOperator, self.index)
+                self.index += 1
+                string = ""
+                continue
             elif self.text[self.index] == cur:
                 break
+            string += self.text[self.index]
             self.index += 1
-        string = self.text[start : self.index].replace("\\", "")
         self.index += 1
         self.appendToken(string, TokenTypes.String, start - 1, self.index - start + 1)
+
+    def lexTemplatedLiteral(self):
+        count = 0
+        while self.index < len(self.text):
+            if self.text[self.index] == "{":
+                count += 1
+            if count == 0 and self.text[self.index] == "}":
+                return
+
+            cur_type = self.get_current_type()
+
+            if cur_type == TokenTypes.Whitespace:
+                self.lexWhitespace()
+
+            elif cur_type == TokenTypes.Text:
+                self.lexText()
+
+            elif cur_type == TokenTypes.Number and self.text[self.index] != ".":
+                self.lexNumber()
+
+            elif cur_type == TokenTypes.Number and self.text[self.index + 1].isdigit():
+                self.lexNumber()
+
+            elif cur_type == TokenTypes.StringMarker:
+                self.lexString()
+
+            elif cur_type == TokenTypes.Special:
+                self.lexOperator()
+
+            else:
+                self.index += 1
 
     def lexOperator(self):
         start = self.index
