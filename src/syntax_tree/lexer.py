@@ -23,7 +23,7 @@ class Lexer:
     def __repr__(self):
         return str(self.list)
 
-    def get_type(self, char):
+    def get_type(self, char: str):
         if char.isspace():
             return TokenTypes.Whitespace
 
@@ -46,7 +46,7 @@ class Lexer:
     def get_current_type(self):
         return self.get_type(self.text[self.index])
 
-    def lex(self, text):
+    def lex(self, text: str):
         self.text = text
         self.list = []
         self.index = 0
@@ -57,7 +57,7 @@ class Lexer:
             return False, self.list, self.errorBag
         return False, self.list, self.errorBag
 
-    def appendToken(self, word, word_type, start, length=None):
+    def appendToken(self, word: str, word_type: TokenTypes, start: int, length=None):
         self.list.append(Token(word, word_type, start, length))
 
     def split(self):
@@ -85,7 +85,7 @@ class Lexer:
             else:
                 self.index += 1
 
-    def get_same_block(self, token_type):
+    def get_same_block(self, token_type: TokenTypes):
         start = self.index
         while self.index < len(self.text) and self.get_current_type() == token_type:
             self.index += 1
@@ -231,13 +231,13 @@ class Lexer:
 
         raise SyntaxError(f"Unknown Operator {cur}{nxt}")
 
-    def appendKeyword(self, text, start):
+    def appendKeyword(self, text: str, start: int):
         if text in DECLARATION_KEYWORDS:
             self.appendToken(text, TokenTypes.DeclarationKeyword, start)
         else:
             self.appendToken(text, self.getTokenFromKeyword(text), start)
 
-    def getTokenFromKeyword(self, keyword):
+    def getTokenFromKeyword(self, keyword: str):
         if keyword == "if":
             return TokenTypes.IfKeyword
         elif keyword == "else":

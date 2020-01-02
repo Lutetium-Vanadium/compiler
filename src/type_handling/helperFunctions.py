@@ -1,8 +1,11 @@
 from token_handling.TokenTypes import TokenTypes
+from token_handling.Token import Token
 from type_handling.Types import Types
+from binder.BoundNode import BoundNode
+from error.ErrorBag import ErrorBag
 
 
-def getUnaryOperatorTypes(operator):
+def getUnaryOperatorTypes(operator: Token):
     if operator.isInstance(
         TokenTypes.MinusOperator,
         TokenTypes.PlusOperator,
@@ -27,11 +30,13 @@ def getType(value):
     return Types.Unknown
 
 
-def isNumber(arg):
+def isNumber(arg: Types):
     return arg == Types.Int or arg == Types.Float
 
 
-def checkBinaryType(operator, left, right, errorBag):
+def checkBinaryType(
+    operator: Token, left: BoundNode, right: BoundNode, errorBag: ErrorBag
+):
     if operator.isInstance(TokenTypes.EEOperator):
         if right.type != left.type:
             errorBag.typeError(right.type, left.type, right.text_span)

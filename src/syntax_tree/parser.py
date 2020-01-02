@@ -15,12 +15,11 @@ from syntax_tree.UnaryNode import *
 from token_handling.Token import *
 from token_handling.TokenTypes import *
 from variables.Variable import Variable, getStatsFromDeclarationKeyword
-
-from variables.Variable import Variable, getStatsFromDeclarationKeyword
+from error.ErrorBag import ErrorBag
 
 
 class Parser:
-    def __init__(self, errorBag):
+    def __init__(self, errorBag: ErrorBag):
         self.tokenList = []
         self.errorBag = errorBag
         self.index = 0
@@ -31,7 +30,7 @@ class Parser:
                 tokenList.pop(i)
         return tokenList
 
-    def parse(self, text, errorBag):
+    def parse(self, text: str, errorBag: ErrorBag):
         self.errorBag = errorBag
         self.text = text
         self.index = 0
@@ -42,7 +41,7 @@ class Parser:
             return continueToNextLine, None, self.errorBag
         return continueToNextLine, self._parse(), self.errorBag
 
-    def peek(self, offset):
+    def peek(self, offset: int):
         if self.index + offset >= len(self.tokenList):
             return self.tokenList[-1]
         return self.tokenList[self.index + offset]
@@ -50,7 +49,7 @@ class Parser:
     def cur(self):
         return self.peek(0)
 
-    def match(self, *expectedTokens):
+    def match(self, *expectedTokens: list):
         cur = self.cur()
         if not cur.isInstance(*expectedTokens):
             self.errorBag.tokenError(cur, expectedTokens, cur.text_span)
@@ -111,7 +110,7 @@ class Parser:
 
         return AssignmentNode(varNode, right, TokenTypes.AssignmentOperator)
 
-    def parseFunctionDeclaration(self, declarationToken):
+    def parseFunctionDeclaration(self, declarationToken: Token):
         varNode = self.parseGeneralExpression(TokenTypes.Variable)
         self.match(TokenTypes.OpenParan)
         params = []
@@ -277,6 +276,6 @@ class Parser:
 
         return FunctionCallNode(funcToken, params, TokenTypes.Function)
 
-    def parseGeneralExpression(self, token_type):
+    def parseGeneralExpression(self, token_type: TokenTypes):
         cur = self.match(token_type)
         return ExpressionNode(cur)
