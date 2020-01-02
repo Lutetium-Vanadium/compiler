@@ -1,5 +1,5 @@
 from type_handling.Types import Types
-
+from variables.default_functions.InbuiltFunctions import InbuiltFunctions
 
 class FunctionVariable:
     def __init__(self, name, data_type, params, functionBody, text_span=None):

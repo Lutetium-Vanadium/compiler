@@ -2,9 +2,10 @@ from binder.BoundNode import BoundNode
 
 
 class BoundFunctionCall(BoundNode):
-    def __init__(self, name, paramValues, return_type, text_span):
+    def __init__(self, name, paramValues, return_type, function_type, text_span):
         self.name = name
         self.paramValues = paramValues
+        self.function_type = function_type
         self.text_span = text_span
         self.type = return_type
 

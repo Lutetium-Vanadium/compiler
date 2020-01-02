@@ -177,7 +177,9 @@ class Binder:
                 )
             params.append(param)
 
-        return BoundFunctionCall(func.name, tuple(params), func.type, node.text_span)
+        return BoundFunctionCall(
+            func.name, tuple(params), func.type, node.function_type, node.text_span
+        )
 
     def bindFunctionDeclaration(self, node: FunctionDeclarationNode):
         varType, _ = getStatsFromDeclarationKeyword(node.declarationKeyword)

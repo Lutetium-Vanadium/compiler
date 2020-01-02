@@ -3,10 +3,11 @@ from textSpan import TextSpan
 
 
 class FunctionCallNode(Node):
-    def __init__(self, token, params, token_type):
+    def __init__(self, token, params, token_type, function_type):
         self.name = token.value
         self.params = tuple(params)
         self.token_type = token_type
+        self.function_type = function_type
         start = token.text_span.start
         if len(params) > 0:
             end = params[-1].text_span.end + 1

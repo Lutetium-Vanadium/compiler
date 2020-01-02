@@ -13,6 +13,9 @@ from binder.BoundWhileStatement import BoundWhileStatement
 
 from token_handling.TokenTypes import TokenTypes
 from type_handling.Types import Types
+from variables.default_functions.InbuiltFunctions import InbuiltFunctions
+
+from random import random
 
 
 class Evaluator:
@@ -145,10 +148,17 @@ class Evaluator:
             )
             params.append(param)
 
-        functionBody = func.functionBody.copy()
-        functionBody.addVariables(params)
+        if node.function_type == InbuiltFunctions.Input:
+            return input()
+        if node.function_type == InbuiltFunctions.Random:
+            return random()
+        if node.function_type == InbuiltFunctions.Print:
+            print(*params)
+        else:
+            functionBody = func.functionBody.copy()
+            functionBody.addVariables(params)
 
-        return self.evaluateNode(functionBody)
+            return self.evaluateNode(functionBody)
 
     def evaluateIfCondition(self, node: BoundIfStatement):
         isTrue = self.evaluateNode(node.condition)

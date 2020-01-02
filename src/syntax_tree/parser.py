@@ -15,6 +15,7 @@ from syntax_tree.UnaryNode import *
 from token_handling.Token import *
 from token_handling.TokenTypes import *
 from variables.Variable import Variable, getStatsFromDeclarationKeyword
+from variables.default_functions.InbuiltFunctions import InbuiltFunctions
 from error.ErrorBag import ErrorBag
 
 
@@ -262,6 +263,14 @@ class Parser:
 
     def parseFunctionExpression(self):
         funcToken = self.match(TokenTypes.Variable)
+        if funcToken.value == "print":
+            funcType = InbuiltFunctions.Print
+        elif funcToken.value == "input":
+            funcType = InbuiltFunctions.Input
+        elif funcToken.value == "random":
+            funcType = InbuiltFunctions.Random
+        else:
+            funcType = InbuiltFunctions.Regular
         self.match(TokenTypes.OpenParan)
         params = []
         if not self.cur().isInstance(TokenTypes.CloseParan):
@@ -274,7 +283,7 @@ class Parser:
 
         self.match(TokenTypes.CloseParan)
 
-        return FunctionCallNode(funcToken, params, TokenTypes.Function)
+        return FunctionCallNode(funcToken, params, TokenTypes.Function, funcType)
 
     def parseGeneralExpression(self, token_type: TokenTypes):
         cur = self.match(token_type)
