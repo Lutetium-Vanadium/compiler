@@ -29,23 +29,31 @@ from type_handling.helperFunctions import (
     getUnaryOperatorTypes,
 )
 
-from error.ErrorBag import ErrorBag
 from type_handling.Types import Types
 from variables.FunctionVariable import FunctionVariable
 from variables.Scope import Scope
 from variables.Variable import getStatsFromDeclarationKeyword
+from pointers import ptrVal, pointer
 
 
 class Binder:
-    def __init__(self, root: BoundNode, errorBag: ErrorBag, globalScope: Scope):
-        self.root = root
+    def __init__(self, errorBagPtr: pointer, globalScopePtr: pointer):
         self.index = 0
-        self.globalScope = globalScope
-        self.errorBag = errorBag
-        self.currentScope = globalScope
+        self._errorBagPtr = errorBagPtr
+        self._globalScopePointer = globalScopePtr
 
-    def bind(self):
-        return self.bindExpression(self.root), self.globalScope, self.errorBag
+    @property
+    def errorBag(self):
+        return ptrVal(self._errorBagPtr)
+
+    @property
+    def globalScope(self):
+        return ptrVal(self._globalScopePointer)
+
+    def bind(self, root: BoundNode):
+        self.root = root
+        self.currentScope = self.globalScope
+        return self.bindExpression(self.root)
 
     def bindExpression(self, node: BoundNode):
         if isinstance(node, BlockStatement):
@@ -142,9 +150,7 @@ class Binder:
         operator = node.operatorToken
         right = self.bindExpression(node.right)
 
-        resultType, self.errorBag = checkBinaryType(
-            operator, left, right, self.errorBag
-        )
+        resultType = checkBinaryType(operator, left, right, self._errorBagPtr)
 
         return BoundBinaryExpression(resultType, left, operator, right, node.text_span)
 

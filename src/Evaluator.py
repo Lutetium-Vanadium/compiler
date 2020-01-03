@@ -19,12 +19,10 @@ from random import random
 
 
 class Evaluator:
-    def __init__(self, syntaxTree: BoundBlockStatement):
+    def evaluate(self, syntaxTree: BoundBlockStatement):
         self.syntaxTree = syntaxTree
         self.scope = None
         self.returnFromBlock = False
-
-    def evaluate(self):
         return self.evaluateNode(self.syntaxTree)
 
     def evaluateNode(self, node: BoundNode):

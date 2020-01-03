@@ -2,12 +2,15 @@
 import os, sys
 from error.ErrorBag import ErrorBag
 from Evaluator import Evaluator
+from syntax_tree.lexer import Lexer
 from syntax_tree.parser import Parser
 from binder.Binder import Binder
 from variables.default_functions import defaultFunctions
 
 from variables.Scope import Scope
 import readline
+
+from pointers import ptr
 
 showParseTree = "parseTree" in sys.argv
 showBoundTree = "boundTree" in sys.argv
@@ -32,12 +35,18 @@ def getIndent(s):
 
 
 errorBag = ErrorBag()
+errorBagPtr = ptr(errorBag)
 
-parser = Parser(errorBag)
-
-bash = False
 globalScope = Scope()
 globalScope.addRange(defaultFunctions)
+globalScopePtr = ptr(globalScope)
+
+lexer = Lexer(errorBagPtr)
+parser = Parser(errorBagPtr)
+binder = Binder(errorBagPtr, globalScopePtr)
+evaluator = Evaluator()
+
+bash = False
 continueToNextLine = False
 expression = ""
 indent = ""
@@ -117,14 +126,14 @@ while True:
     expression += "\n"
 
     errorBag.addText(expression)
-    continueToNextLine, rootNode, errorBag = parser.parse(expression, errorBag)
+    continueToNextLine, tokenList = lexer.lex(expression)
     if continueToNextLine:
         continue
     else:
         expression = ""
         indent = ""
-    binder = Binder(rootNode, errorBag, globalScope)
-    boundTree, globalScope, errorBag = binder.bind()
+    rootNode = parser.parse(tokenList)
+    boundTree = binder.bind(rootNode)
 
     if errorBag.any():
         errorBag.prt()
@@ -137,5 +146,4 @@ while True:
             boundTree.prt(boundTree)
             print()
 
-        evaluator = Evaluator(boundTree)
-        print(evaluator.evaluate())
+        print(evaluator.evaluate(boundTree))

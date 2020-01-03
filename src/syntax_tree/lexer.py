@@ -2,6 +2,7 @@ from textSpan import TextSpan
 from token_handling.TokenTypes import *
 from token_handling.Token import Token
 from keywords.Keywords import *
+from pointers import ptrVal, pointer
 
 SPECIAL_CHARACTERS = "+-*/%^(){|&<=>!},"
 
@@ -9,10 +10,10 @@ STRING_MARKERS = "\"'`"
 
 
 class Lexer:
-    def __init__(self, errorBag):
+    def __init__(self, errorBagPtr):
         self.text = ""
         self.list = []
-        self.errorBag = errorBag
+        self._errorBagPtr = errorBagPtr
         self.index = 0
         self.openBrace = 0
         self.closeBrace = 0
@@ -22,6 +23,24 @@ class Lexer:
 
     def __repr__(self):
         return str(self.list)
+
+    @property
+    def cur(self):
+        return self.text[self.index]
+
+    @property
+    def next(self):
+        if self.index + 1 == len(self.text):
+            return "\0"
+        return self.text[self.index + 1]
+
+    @property
+    def cur_type(self):
+        return self.get_type(self.cur)
+
+    @property
+    def errorBag(self):
+        return ptrVal(self._errorBagPtr)
 
     def get_type(self, char: str):
         if char.isspace():
@@ -43,43 +62,41 @@ class Lexer:
         self.errorBag.badCharError(char, TextSpan(self.index, 1))
         return TokenTypes.Bad
 
-    def get_current_type(self):
-        return self.get_type(self.text[self.index])
-
     def lex(self, text: str):
         self.text = text
         self.list = []
         self.index = 0
         self.split()
+        self.openBrace = 0
+        self.closeBrace = 0
+
         if self.openBrace > self.closeBrace:
-            return True, self.list, self.errorBag
+            return True, self.list
         elif self.openBrace < self.closeBrace:
-            return False, self.list, self.errorBag
-        return False, self.list, self.errorBag
+            return False, self.list
+        return False, self.list
 
     def appendToken(self, word: str, word_type: TokenTypes, start: int, length=None):
         self.list.append(Token(word, word_type, start, length))
 
     def split(self):
         while self.index < len(self.text):
-            cur_type = self.get_current_type()
-
-            if cur_type == TokenTypes.Whitespace:
+            if self.cur_type == TokenTypes.Whitespace:
                 self.lexWhitespace()
 
-            elif cur_type == TokenTypes.Text:
+            elif self.cur_type == TokenTypes.Text:
                 self.lexText()
 
-            elif cur_type == TokenTypes.Number and self.text[self.index] != ".":
+            elif self.cur_type == TokenTypes.Number and self.cur != ".":
                 self.lexNumber()
 
-            elif cur_type == TokenTypes.Number and self.text[self.index + 1].isdigit():
+            elif self.cur_type == TokenTypes.Number and self.next.isdigit():
                 self.lexNumber()
 
-            elif cur_type == TokenTypes.StringMarker:
+            elif self.cur_type == TokenTypes.StringMarker:
                 self.lexString()
 
-            elif cur_type == TokenTypes.Special:
+            elif self.cur_type == TokenTypes.Special:
                 self.lexOperator()
 
             else:
@@ -87,7 +104,7 @@ class Lexer:
 
     def get_same_block(self, token_type: TokenTypes):
         start = self.index
-        while self.index < len(self.text) and self.get_current_type() == token_type:
+        while self.index < len(self.text) and self.cur_type == token_type:
             self.index += 1
         return self.text[start : self.index], start
 
@@ -114,7 +131,7 @@ class Lexer:
         self.appendToken(num, TokenTypes.Number, start)
 
     def lexString(self):
-        cur = self.text[self.index]
+        cur = self.cur
         if cur == '"':
             token = TokenTypes.DoubleQuote
         elif cur == "'":
@@ -131,9 +148,9 @@ class Lexer:
         string = ""
         start = self.index
         while self.index < len(self.text):
-            if self.text[self.index] == "\\":
+            if self.cur == "\\":
                 self.index += 1
-            elif self.text[self.index] == "{":
+            elif self.cur == "{":
                 self.appendToken(string, TokenTypes.String, start - 1)
                 self.appendToken("+", TokenTypes.PlusOperator, self.index)
                 self.appendToken("(", TokenTypes.OpenParan, self.index)
@@ -144,9 +161,9 @@ class Lexer:
                 self.index += 1
                 string = ""
                 continue
-            elif self.text[self.index] == cur:
+            elif self.cur == cur:
                 break
-            string += self.text[self.index]
+            string += self.cur
             self.index += 1
         self.index += 1
         self.appendToken(string, TokenTypes.String, start - 1, self.index - start + 1)
@@ -154,29 +171,27 @@ class Lexer:
     def lexTemplatedLiteral(self):
         count = 0
         while self.index < len(self.text):
-            if self.text[self.index] == "{":
+            if self.cur == "{":
                 count += 1
-            if count == 0 and self.text[self.index] == "}":
+            if count == 0 and self.cur == "}":
                 return
 
-            cur_type = self.get_current_type()
-
-            if cur_type == TokenTypes.Whitespace:
+            if self.cur_type == TokenTypes.Whitespace:
                 self.lexWhitespace()
 
-            elif cur_type == TokenTypes.Text:
+            elif self.cur_type == TokenTypes.Text:
                 self.lexText()
 
-            elif cur_type == TokenTypes.Number and self.text[self.index] != ".":
+            elif self.cur_type == TokenTypes.Number and self.cur != ".":
                 self.lexNumber()
 
-            elif cur_type == TokenTypes.Number and self.text[self.index + 1].isdigit():
+            elif self.cur_type == TokenTypes.Number and self.next.isdigit():
                 self.lexNumber()
 
-            elif cur_type == TokenTypes.StringMarker:
+            elif self.cur_type == TokenTypes.StringMarker:
                 self.lexString()
 
-            elif cur_type == TokenTypes.Special:
+            elif self.cur_type == TokenTypes.Special:
                 self.lexOperator()
 
             else:
@@ -184,94 +199,103 @@ class Lexer:
 
     def lexOperator(self):
         start = self.index
-        cur = self.text[self.index]
-        if self.index < len(self.text) - 1:
-            nxt = self.text[self.index + 1]
-        else:
-            nxt = "\0"
-        self.index += 1
 
-        if cur == ",":
+        if self.cur == ",":
+            self.index += 1
             self.appendToken(",", TokenTypes.CommaToken, start)
             return
-        if cur == "+":
-            if nxt == "+":
+        if self.cur == "+":
+            self.index += 1
+            if self.cur == "+":
                 self.index += 1
                 self.appendToken("++", TokenTypes.PlusPlusOperator, start)
                 return
             self.appendToken("+", TokenTypes.PlusOperator, start)
             return
-        if cur == "-":
-            if nxt == "-":
+        if self.cur == "-":
+            self.index += 1
+            if self.cur == "-":
                 self.index += 1
                 self.appendToken("--", TokenTypes.MinusMinusOperator, start)
                 return
             self.appendToken("-", TokenTypes.MinusOperator, start)
             return
-        if cur == "*":
+        if self.cur == "*":
+            self.index += 1
             self.appendToken("*", TokenTypes.StarOperator, start)
             return
-        if cur == "/":
+        if self.cur == "/":
+            self.index += 1
             self.appendToken("/", TokenTypes.SlashOperator, start)
             return
-        if cur == "%":
+        if self.cur == "%":
+            self.index += 1
             self.appendToken("%", TokenTypes.ModOperator, start)
             return
-        if cur == "^":
+        if self.cur == "^":
+            self.index += 1
             self.appendToken("^", TokenTypes.CaretOperator, start)
             return
-        if cur == "(":
+        if self.cur == "(":
+            self.index += 1
             self.appendToken("(", TokenTypes.OpenParan, start)
             return
-        if cur == ")":
+        if self.cur == ")":
+            self.index += 1
             self.appendToken(")", TokenTypes.CloseParan, start)
             return
-        if cur == "{":
+        if self.cur == "{":
+            self.index += 1
             self.openBrace += 1
             self.appendToken("{", TokenTypes.OpenBrace, start)
             return
-        if cur == "}":
+        if self.cur == "}":
+            self.index += 1
             self.closeBrace += 1
             self.appendToken("}", TokenTypes.CloseBrace, start)
             return
-        if cur == nxt == "|":
-            self.index += 1
+        if self.cur == self.next == "|":
+            self.index += 2
             self.appendToken("||", TokenTypes.OrOperator, start)
             return
-        if cur == nxt == "&":
-            self.index += 1
+        if self.cur == self.next == "&":
+            self.index += 2
             self.appendToken("&&", TokenTypes.AndOperator, start)
             return
-        if cur == "!":
-            if nxt == "=":
+        if self.cur == "!":
+            self.index += 1
+            if self.cur == "=":
                 self.index += 1
                 self.appendToken("!=", TokenTypes.NEOperator, start)
                 return
             self.appendToken("!", TokenTypes.NotOperator, start)
             return
-        if cur == ">":
-            if nxt == "=":
+        if self.cur == ">":
+            self.index += 1
+            if self.cur == "=":
                 self.index += 1
                 self.appendToken(">=", TokenTypes.GEOperator, start)
                 return
             self.appendToken(">", TokenTypes.GTOperator, start)
             return
-        if cur == "<":
-            if nxt == "=":
+        if self.cur == "<":
+            self.index += 1
+            if self.cur == "=":
                 self.index += 1
                 self.appendToken("<=", TokenTypes.LEOperator, start)
                 return
             self.appendToken("<", TokenTypes.LTOperator, start)
             return
-        if cur == "=":
-            if nxt == "=":
+        if self.cur == "=":
+            self.index += 1
+            if self.cur == "=":
                 self.index += 1
                 self.appendToken("==", TokenTypes.EEOperator, start)
                 return
             self.appendToken("=", TokenTypes.AssignmentOperator, start)
             return
 
-        raise SyntaxError(f"Unknown Operator {cur}{nxt}")
+        raise SyntaxError(f"Unknown Operator {self.cur}{self.next}")
 
     def appendKeyword(self, text: str, start: int):
         if text in DECLARATION_KEYWORDS:

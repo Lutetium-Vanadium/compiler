@@ -3,6 +3,7 @@ from token_handling.Token import Token
 from type_handling.Types import Types
 from binder.BoundNode import BoundNode
 from error.ErrorBag import ErrorBag
+from pointers import ptrVal, pointer
 
 
 def getUnaryOperatorTypes(operator: Token):
@@ -35,22 +36,22 @@ def isNumber(arg: Types):
 
 
 def checkBinaryType(
-    operator: Token, left: BoundNode, right: BoundNode, errorBag: ErrorBag
+    operator: Token, left: BoundNode, right: BoundNode, errorBagPtr: pointer
 ):
     if operator.isInstance(TokenTypes.EEOperator):
         if right.type != left.type:
             errorBag.typeError(right.type, left.type, right.text_span)
-        return Types.Bool, errorBag
+        return Types.Bool
 
     if left.type == Types.String or right.type == Types.String:
         if operator.isInstance(TokenTypes.PlusOperator):
-            return Types.String, errorBag
+            return Types.String
         if operator.isInstance(TokenTypes.StarOperator):
             if left.type == Types.String and right.type != Types.Int:
                 errorBag.typeError(right.type, Types.String, right.text_span)
             if right.type == Types.String and left.type != Types.Int:
                 errorBag.typeError(left.type, Types.String, left.text_span)
-            return Types.String, errorBag
+            return Types.String
 
     # Arithmetic Operators
     if operator.isInstance(
@@ -70,8 +71,8 @@ def checkBinaryType(
                 right.type, f"{Types.Int}> or <{Types.Float}", right.text_span
             )
         if left.type == right.type == Types.Int:
-            return Types.Int, errorBag
-        return Types.Float, errorBag
+            return Types.Int
+        return Types.Float
 
     # Boolean Operators
     if operator.isInstance(TokenTypes.OrOperator, TokenTypes.AndOperator):
@@ -79,7 +80,7 @@ def checkBinaryType(
             errorBag.typeError(left.type, Types.Bool, left.text_span)
         if right.type != Types.Bool:
             errorBag.typeError(right.type, Types.Bool, right.text_span)
-        return Types.Bool, errorBag
+        return Types.Bool
 
     if operator.isInstance(
         TokenTypes.NEOperator,
@@ -97,6 +98,6 @@ def checkBinaryType(
                 right.type, f"{Types.Int}> or <{Types.Float}", right.text_span
             )
 
-        return Types.Bool, errorBag
+        return Types.Bool
 
     raise EnvironmentError("Python is dying")

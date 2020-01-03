@@ -1,9 +1,11 @@
 from syntax_tree.parser import Parser
+from syntax_tree.lexer import Lexer
 from Evaluator import Evaluator
 from binder.Binder import Binder
 from error.ErrorBag import ErrorBag
 from variables.Scope import Scope
 from variables.default_functions import defaultFunctions
+from pointers import ptr
 
 
 def run_multiple_expressions(txt_lst, expected_type="string", returnType="single"):
@@ -14,22 +16,29 @@ def run_multiple_expressions(txt_lst, expected_type="string", returnType="single
             - single: returns last element
             - all: returns the full list 
     """
+    errorBag = ErrorBag()
+    errorBagPtr = ptr(errorBag)
+
     scope = Scope()
     scope.addRange(defaultFunctions)
-    errorBag = ErrorBag()
-    parser = Parser(errorBag)
+    scopePtr = ptr(scope)
+
+    lexer = Lexer(errorBagPtr)
+    parser = Parser(errorBagPtr)
+    binder = Binder(errorBagPtr, scopePtr)
+    evaluator = Evaluator()
+
     output_lst = []
     for text in txt_lst:
         errorBag.addText(text)
-        _, rootNode, errorBag = parser.parse(text, errorBag)
-        binder = Binder(rootNode, errorBag, scope)
-        boundTree, scope, errorBag = binder.bind()
+        tokenList = lexer.lex(text)[1]
+        rootNode = parser.parse(tokenList)
+        boundTree = binder.bind(rootNode)
 
         if errorBag.any():
             output_lst.append("ERROR")
         else:
-            evaluator = Evaluator(boundTree)
-            e = str(evaluator.evaluate())
+            e = str(evaluator.evaluate(boundTree))
             if expected_type == "int":
                 e = int(e)
             elif expected_type == "float":

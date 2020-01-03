@@ -16,14 +16,22 @@ from token_handling.Token import *
 from token_handling.TokenTypes import *
 from variables.Variable import Variable, getStatsFromDeclarationKeyword
 from variables.default_functions.InbuiltFunctions import InbuiltFunctions
-from error.ErrorBag import ErrorBag
+from pointers import ptrVal, pointer
 
 
 class Parser:
-    def __init__(self, errorBag: ErrorBag):
+    def __init__(self, errorBagPtr: pointer):
         self.tokenList = []
-        self.errorBag = errorBag
+        self._errorBagPtr = errorBagPtr
         self.index = 0
+
+    @property
+    def cur(self):
+        return self.peek(0)
+
+    @property
+    def errorBag(self):
+        return ptrVal(self._errorBagPtr)
 
     def sanitize(self, tokenList):
         for i in range(len(tokenList) - 1, -1, -1):
@@ -31,27 +39,18 @@ class Parser:
                 tokenList.pop(i)
         return tokenList
 
-    def parse(self, text: str, errorBag: ErrorBag):
-        self.errorBag = errorBag
-        self.text = text
+    def parse(self, tokenList):
         self.index = 0
-        lexer = Lexer(self.errorBag)
-        continueToNextLine, tokenList, self.errorBag = lexer.lex(text)
         self.tokenList = self.sanitize(tokenList) + [EOF_TOKEN]
-        if continueToNextLine:
-            return continueToNextLine, None, self.errorBag
-        return continueToNextLine, self._parse(), self.errorBag
+        return self._parse()
 
     def peek(self, offset: int):
         if self.index + offset >= len(self.tokenList):
             return self.tokenList[-1]
         return self.tokenList[self.index + offset]
 
-    def cur(self):
-        return self.peek(0)
-
     def match(self, *expectedTokens: list):
-        cur = self.cur()
+        cur = self.cur
         if not cur.isInstance(*expectedTokens):
             self.errorBag.tokenError(cur, expectedTokens, cur.text_span)
         self.index += 1
@@ -59,8 +58,8 @@ class Parser:
 
     def _parse(self, end_token=TokenTypes.EOF):
         lst = []
-        while not self.cur().isInstance(end_token):
-            if self.cur().isInstance(TokenTypes.OpenBrace):
+        while not self.cur.isInstance(end_token):
+            if self.cur.isInstance(TokenTypes.OpenBrace):
                 self.index += 1
                 lst.append(self._parse(TokenTypes.CloseBrace))
             else:
@@ -71,10 +70,10 @@ class Parser:
         return BlockStatement(lst)
 
     def parseStatement(self):
-        if self.cur().isInstance(TokenTypes.DeclarationKeyword):
+        if self.cur.isInstance(TokenTypes.DeclarationKeyword):
             return self.parseDeclareExpression()
 
-        if self.cur().isInstance(TokenTypes.Variable):
+        if self.cur.isInstance(TokenTypes.Variable):
             if self.peek(1).isInstance(TokenTypes.AssignmentOperator):
                 return self.parseAssignmentExpression()
             elif self.peek(1).isInstance(*CALC_ASSIGN_OPERATORS) and self.peek(
@@ -82,16 +81,16 @@ class Parser:
             ).isInstance(TokenTypes.AssignmentOperator):
                 return self.parseCalculateAssignmentExpression()
 
-        if self.cur().isInstance(TokenTypes.IfKeyword):
+        if self.cur.isInstance(TokenTypes.IfKeyword):
             return self.parseIfStatement()
 
-        if self.cur().isInstance(TokenTypes.WhileKeyword):
+        if self.cur.isInstance(TokenTypes.WhileKeyword):
             return self.parseWhileStatement()
 
-        if self.cur().isInstance(TokenTypes.ForKeyword):
+        if self.cur.isInstance(TokenTypes.ForKeyword):
             return self.parseForStatement()
 
-        if self.cur().isInstance(TokenTypes.ReturnKeyword):
+        if self.cur.isInstance(TokenTypes.ReturnKeyword):
             return self.parseReturnStatement()
 
         return self.parseBinaryExpression()
@@ -115,8 +114,8 @@ class Parser:
         varNode = self.parseGeneralExpression(TokenTypes.Variable)
         self.match(TokenTypes.OpenParan)
         params = []
-        if not self.cur().isInstance(TokenTypes.CloseParan):
-            while not self.cur().isInstance(TokenTypes.EOF):
+        if not self.cur.isInstance(TokenTypes.CloseParan):
+            while not self.cur.isInstance(TokenTypes.EOF):
                 token = self.match(TokenTypes.DeclarationKeyword)
                 varType = getStatsFromDeclarationKeyword(token.value)[0]
                 if varType == None:
@@ -125,7 +124,7 @@ class Parser:
                     )
                 var = self.match(TokenTypes.Variable)
                 params.append(Variable(var.value, varType))
-                if self.cur().isInstance(TokenTypes.CommaToken):
+                if self.cur.isInstance(TokenTypes.CommaToken):
                     self.index += 1
                 else:
                     break
@@ -149,10 +148,10 @@ class Parser:
         funcToken = self.match(TokenTypes.Variable)
         self.match(TokenTypes.OpenParan)
         params = []
-        if not self.cur().isInstance(TokenTypes.CloseParan):
-            while not self.cur().isInstance(TokenTypes.EOF):
+        if not self.cur.isInstance(TokenTypes.CloseParan):
+            while not self.cur.isInstance(TokenTypes.EOF):
                 params.append(self.parseStatement())
-                if self.cur().isInstance(TokenTypes.CommaToken):
+                if self.cur.isInstance(TokenTypes.CommaToken):
                     self.index += 1
                 else:
                     break
@@ -167,9 +166,9 @@ class Parser:
         openBrace = self.match(TokenTypes.OpenBrace)
         thenBlock = self._parse(TokenTypes.CloseBrace)
         elseBlock = None
-        if self.cur().isInstance(TokenTypes.ElseKeyword):
+        if self.cur.isInstance(TokenTypes.ElseKeyword):
             self.index += 1
-            if self.cur().isInstance(TokenTypes.IfKeyword):
+            if self.cur.isInstance(TokenTypes.IfKeyword):
                 elseBlock = self.parseIfStatement()
             else:
                 self.match(TokenTypes.OpenBrace)
@@ -203,9 +202,9 @@ class Parser:
         return ReturnStatement(returnToken, to_return)
 
     def parseBinaryExpression(self, parentPrecedence=0):
-        unaryPrecedence = getUnaryPrecedence(self.cur())
+        unaryPrecedence = getUnaryPrecedence(self.cur)
         if unaryPrecedence != 0 and unaryPrecedence >= parentPrecedence:
-            operator = self.cur()
+            operator = self.cur
             self.index += 1
             operand = self.parseBinaryExpression(unaryPrecedence)
             left = UnaryOperatorNode(operand, operator)
@@ -213,20 +212,20 @@ class Parser:
             left = self.parsePrimaryExpression()
 
         while True:
-            precedence = getBinaryPrecedence(self.cur())
+            precedence = getBinaryPrecedence(self.cur)
             if precedence == 0 or precedence <= parentPrecedence:
                 break
 
-            operatorToken = self.cur()
+            operatorToken = self.cur
             self.index += 1
             right = self.parseBinaryExpression(precedence)
             left = BinaryOperatorNode(left, right, operatorToken)
 
-        if self.cur().isInstance(TokenTypes.PlusPlusOperator) and self.peek(
+        if self.cur.isInstance(TokenTypes.PlusPlusOperator) and self.peek(
             -1
         ).isInstance(TokenTypes.Variable):
             left.updateValue(+1)
-        elif self.cur().isInstance(TokenTypes.MinusMinusOperator) and self.peek(
+        elif self.cur.isInstance(TokenTypes.MinusMinusOperator) and self.peek(
             -1
         ).isInstance(TokenTypes.Variable):
             left.updateValue(-1)
@@ -234,25 +233,23 @@ class Parser:
         return left
 
     def parsePrimaryExpression(self):
-        cur = self.cur()
-
-        if cur.isInstance(TokenTypes.OpenParan):
+        if self.cur.isInstance(TokenTypes.OpenParan):
             return self.parseParanExpression()
 
-        if cur.isInstance(TokenTypes.Variable) and self.peek(1).isInstance(
+        if self.cur.isInstance(TokenTypes.Variable) and self.peek(1).isInstance(
             TokenTypes.OpenParan
         ):
             return self.parseFunctionExpression()
 
-        if cur.isInstance(
+        if self.cur.isInstance(
             TokenTypes.Boolean,
             TokenTypes.Number,
             TokenTypes.Variable,
             TokenTypes.String,
         ):
-            return self.parseGeneralExpression(cur.token_type)
+            return self.parseGeneralExpression(self.cur.token_type)
 
-        self.errorBag.unexpectedToken(cur, cur.text_span)
+        self.errorBag.unexpectedToken(self.cur, self.cur.text_span)
         self.index += 1
 
     def parseParanExpression(self):
@@ -273,10 +270,10 @@ class Parser:
             funcType = InbuiltFunctions.Regular
         self.match(TokenTypes.OpenParan)
         params = []
-        if not self.cur().isInstance(TokenTypes.CloseParan):
-            while not self.cur().isInstance(TokenTypes.EOF):
+        if not self.cur.isInstance(TokenTypes.CloseParan):
+            while not self.cur.isInstance(TokenTypes.EOF):
                 params.append(self.parseStatement())
-                if self.cur().isInstance(TokenTypes.CommaToken):
+                if self.cur.isInstance(TokenTypes.CommaToken):
                     self.index += 1
                 else:
                     break
