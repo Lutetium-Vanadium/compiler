@@ -69,31 +69,6 @@ class TokenTypes(Enum):
     Bad = auto()
 
 
-OPERATOR_TYPES = (
-    TokenTypes.PlusOperator,
-    TokenTypes.MinusOperator,
-    TokenTypes.StarOperator,
-    TokenTypes.SlashOperator,
-    TokenTypes.ModOperator,
-    TokenTypes.CaretOperator,
-    TokenTypes.PlusPlusOperator,
-    TokenTypes.MinusMinusOperator,
-    TokenTypes.OpenParan,
-    TokenTypes.CloseParan,
-    TokenTypes.OpenBrace,
-    TokenTypes.CloseBrace,
-    TokenTypes.OrOperator,
-    TokenTypes.AndOperator,
-    TokenTypes.NotOperator,
-    TokenTypes.NEOperator,
-    TokenTypes.EEOperator,
-    TokenTypes.LTOperator,
-    TokenTypes.GTOperator,
-    TokenTypes.LEOperator,
-    TokenTypes.GEOperator,
-    TokenTypes.AssignmentOperator,
-)
-
 CALC_ASSIGN_OPERATORS = (
     TokenTypes.PlusOperator,
     TokenTypes.MinusOperator,
