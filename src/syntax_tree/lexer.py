@@ -5,7 +5,7 @@ from keywords.Keywords import *
 from pointers import ptrVal, pointer
 from error.ErrorBag import ErrorBag
 
-SPECIAL_CHARACTERS = "+-*/%^(){|&<=>!},"
+SPECIAL_CHARACTERS = "{([+-*/%^|!&<=>,])}"
 
 STRING_MARKERS = "\"'`"
 
@@ -254,6 +254,14 @@ class Lexer:
             self.index += 1
             self.closeBrace += 1
             self.appendToken("}", TokenTypes.CloseBrace, start)
+            return
+        if self.cur == "[":
+            self.index += 1
+            self.appendToken("[", TokenTypes.OpenBracket, start)
+            return
+        if self.cur == "]":
+            self.index += 1
+            self.appendToken("]", TokenTypes.CloseBracket, start)
             return
         if self.cur == self.next == "|":
             self.index += 2

@@ -120,3 +120,10 @@ class ErrorBag:
             )
         )
 
+    def noValWithVarOrConst(self, keyword, text_span):
+        self.report(
+            Error(
+                f"You can only use '{keyword}' if the variable is simultaneously initialized",
+                text_span,
+            )
+        )

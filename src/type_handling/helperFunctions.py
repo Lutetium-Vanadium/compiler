@@ -28,6 +28,8 @@ def getType(value):
         return Types.Bool
     if type(value) == str:
         return Types.String
+    if type(value) == list:
+        return Types.List
     return Types.Unknown
 
 
@@ -38,6 +40,7 @@ def isNumber(arg: Types):
 def checkBinaryType(
     operator: Token, left: BoundNode, right: BoundNode, errorBagPtr: pointer
 ):
+    errorBag = ptrVal(errorBagPtr)
     if operator.isInstance(TokenTypes.EEOperator):
         if right.type != left.type:
             errorBag.typeError(right.type, left.type, right.text_span)
@@ -52,6 +55,21 @@ def checkBinaryType(
             if right.type == Types.String and left.type != Types.Int:
                 errorBag.typeError(left.type, Types.String, left.text_span)
             return Types.String
+
+    if left.type == Types.List or right.type == Types.String:
+        if operator.isInstance(TokenTypes.PlusOperator):
+            if left.type == Types.List and right.type != Types.List:
+                errorBag.typeError(right.type, Types.List, right.text_span)
+            if right.type == Types.List and left.type != Types.List:
+                errorBag.typeError(left.type, Types.List, left.text_span)
+            return Types.List
+
+        if operator.isInstance(TokenTypes.StarOperator):
+            if left.type == Types.List and right.type != Types.Int:
+                errorBag.typeError(right.type, Types.List, right.text_span)
+            if right.type == Types.List and left.type != Types.Int:
+                errorBag.typeError(left.type, Types.List, left.text_span)
+            return Types.List
 
     # Arithmetic Operators
     if operator.isInstance(

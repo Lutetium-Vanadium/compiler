@@ -9,6 +9,7 @@ class TokenTypes(Enum):
     Boolean = auto()
     String = auto()
     Variable = auto()
+    List = auto()
     Function = auto()
     EOL = auto()
     EOF = auto()
@@ -64,6 +65,8 @@ class TokenTypes(Enum):
     CloseParan = auto()  #              )
     OpenBrace = auto()  #               {
     CloseBrace = auto()  #              }
+    OpenBracket = auto()  #             [
+    CloseBracket = auto()  #            ]
 
     # Unknown
     Bad = auto()

@@ -142,7 +142,7 @@ class Evaluator:
             param = func.params[i].copy()
             value = self.evaluateNode(node.paramValues[i])
             param.value = BoundLiteralExpression(
-                Types.Int, value, node.paramValues[i].text_span
+                Types.Int, value, node.paramValues[i].text_span, type(value) == list
             )
             params.append(param)
 
@@ -166,6 +166,8 @@ class Evaluator:
             return self.evaluateNode(node.elseBlock)
 
     def evaluateLiteralExpression(self, node: BoundLiteralExpression):
+        if node.isList:
+            return [self.evaluateNode(item) for item in node.value]
         return node.value
 
     def evaluateReturnStatement(self, node: BoundReturnStatement):

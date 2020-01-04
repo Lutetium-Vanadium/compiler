@@ -8,6 +8,20 @@ class Scope:
         self.variables = {}
         self.isGlobalScope = parentScope == None
 
+    def __repr__(self):
+        s = "{\n"
+        for k, v in self.variables.items():
+            s += f"\t{k}: {v},\n"
+        s += "}"
+        return s
+
+    def __str__(self):
+        s = "{\n"
+        for k, v in self.variables.items():
+            s += f"\t{k}: {v},\n"
+        s += "}"
+        return s
+
     def addRange(self, *args):
         for dct in args:
             self.variables.update(dct)
@@ -51,5 +65,7 @@ class Scope:
 
     def updateValue(self, varName, newValue, textSpan):
         _, var = self.tryGetVariable(varName)
-        newNode = BoundLiteralExpression(var.type, newValue, textSpan)
+        newNode = BoundLiteralExpression(
+            var.type, newValue, textSpan, type(newValue) == list
+        )
         self.setValue(varName, newNode)

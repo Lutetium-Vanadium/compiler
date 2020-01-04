@@ -215,6 +215,9 @@ class Parser:
         if self.cur.isInstance(TokenTypes.OpenParan):
             return self.parseParanExpression()
 
+        if self.cur.isInstance(TokenTypes.OpenBracket):
+            return self.parseListExpression()
+
         if self.cur.isInstance(TokenTypes.Variable) and self.peek(1).isInstance(
             TokenTypes.OpenParan
         ):
@@ -236,6 +239,21 @@ class Parser:
         expression = self.parseStatement()
         self.match(TokenTypes.CloseParan)
         return expression
+
+    def parseListExpression(self) -> ExpressionNode:
+        start = self.match(TokenTypes.OpenBracket).text_span.start
+
+        items = []
+        if not self.cur.isInstance(TokenTypes.CloseBracket):
+            while not self.cur.isInstance(TokenTypes.EOF):
+                items.append(self.parseBinaryExpression())
+                if self.cur.isInstance(TokenTypes.CommaToken):
+                    self.index += 1
+                else:
+                    break
+        end = self.match(TokenTypes.CloseBracket).text_span.end
+        text_span = TextSpan(start, end - start)
+        return ExpressionNode(items, text_span, TokenTypes.List, True)
 
     def parseFunctionExpression(self) -> FunctionCallNode:
         funcToken = self.match(TokenTypes.Variable)

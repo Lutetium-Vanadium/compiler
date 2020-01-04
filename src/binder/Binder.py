@@ -120,7 +120,18 @@ class Binder:
         varName = node.identifier.value
         varValue = self.bindExpression(node.expression)
         if varType == None:
-            varType = varValue.type
+            if varValue.type == None:
+                self.errorBag.noValWithVarOrConst(
+                    node.declarationKeyword, node.text_span
+                )
+                varType = Types.Unknown
+                varValue.type = Types.Unknown
+            else:
+                varType = varValue.type
+        elif varValue.type == None:
+            # varType is guaranteed to not be None as that is handled above
+            varValue.type == varType
+
         if varType != varValue.type:
             self.errorBag.assignmentTypeError(
                 varValue.type, varType, varValue.text_span
@@ -168,12 +179,18 @@ class Binder:
             success, var = self.currentScope.tryGetVariable(node.value)
             if not success:
                 self.errorBag.nameError(node.value, node.text_span)
-                return BoundLiteralExpression(Types.Unknown, node.value, node.text_span)
+                return BoundLiteralExpression(
+                    Types.Unknown, node.value, node.text_span, False
+                )
 
             return BoundVariableExpression(var.name, var.type, node.text_span)
         else:
+            if node.isList:
+                val = [self.bindExpression(i) for i in node.value]
+            else:
+                val = node.value
             return BoundLiteralExpression(
-                getType(node.value), node.value, node.text_span
+                getType(val), val, node.text_span, node.isList
             )
 
     def bindFunctionCall(self, node: FunctionCallNode) -> BoundFunctionCall:

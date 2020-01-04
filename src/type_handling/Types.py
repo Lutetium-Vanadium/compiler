@@ -7,6 +7,7 @@ class Types(Enum):
     Bool = auto()
     Float = auto()
     Int = auto()
+    List = auto()
     String = auto()
     Unknown = auto()
     Void = auto()

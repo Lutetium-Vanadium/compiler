@@ -7,6 +7,7 @@ sys.path.append("/".join(os.getcwd().split("/")[:-1]) + "/src")
 
 from tests.helpers import *
 
+
 class TestOperations(TestCase):
     def test_arithmetic(self):
         self.assertEqual(run_expression("1+1", "int"), 2)
@@ -281,3 +282,13 @@ class TestOperations(TestCase):
 
         to_run = ["int a = 1", "int c = 0", "while a < 1024 { a *= 2  c += 1 }", "c"]
         self.assertEqual(run_multiple_expressions(to_run, "int"), 10)
+
+    def test_lists(self):
+        to_run = "list a = [13, 123, 12313]"
+        self.assertEqual(run_expression(to_run), "[13, 123, 12313]")
+
+        to_run = ["list a = [13, 123, 12313] + [231, 12313]", "a"]
+        self.assertEqual(
+            run_multiple_expressions(to_run), "[13, 123, 12313, 231, 12313]"
+        )
+
