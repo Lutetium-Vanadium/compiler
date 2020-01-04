@@ -21,8 +21,4 @@ class Token:
     def isInstance(self, *args):
         return self.token_type in args
 
-    def evaluate(self):
-        return self.value
-
-
 EOF_TOKEN = Token("\0", TokenTypes.EOF, -1)

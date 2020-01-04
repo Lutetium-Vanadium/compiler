@@ -67,9 +67,9 @@ class Lexer:
         self.text = text
         self.list = []
         self.index = 0
-        self.split()
         self.openBrace = 0
         self.closeBrace = 0
+        self.split()
 
         if self.openBrace > self.closeBrace:
             return True, self.list

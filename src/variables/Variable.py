@@ -57,3 +57,5 @@ def getStatsFromDeclarationKeyword(declarationKeyword):
         return Types.String, False
     if declarationKeyword == "bool":
         return Types.Bool, False
+
+    return Types.Unknown, False

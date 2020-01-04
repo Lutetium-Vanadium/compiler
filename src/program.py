@@ -28,8 +28,7 @@ def cmd_input(prompt, prefill):
 
 def getIndent(s):
     i = 0
-    a = len(s)
-    while i < len(s) and s[i] == "\t" or s[i] == " ":
+    while i < len(s) and (s[i] == "\t" or s[i] == " "):
         i += 1
     return s[:i]
 
