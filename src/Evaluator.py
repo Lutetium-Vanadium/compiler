@@ -19,13 +19,13 @@ from random import random
 
 
 class Evaluator:
-    def evaluate(self, syntaxTree: BoundBlockStatement) -> Union[str, int, float, bool]:
+    def evaluate(self, syntaxTree: BoundBlockStatement):
         self.syntaxTree = syntaxTree
         self.scope = None
         self.returnFromBlock = False
         return self.evaluateNode(self.syntaxTree)
 
-    def evaluateNode(self, node: BoundNode) -> Union[str, int, float, bool]:
+    def evaluateNode(self, node: BoundNode):
         if isinstance(node, BoundDeclarationExpression):
             return self.evaluateDeclarationExpression(node)
 
@@ -62,9 +62,7 @@ class Evaluator:
         if isinstance(node, BoundUnaryExpression):
             return self.evaluateUnaryExpression(node)
 
-    def evaluateBlockStatement(
-        self, node: BoundBlockStatement
-    ) -> Union[str, int, float, bool]:
+    def evaluateBlockStatement(self, node: BoundBlockStatement):
         prevScope = self.scope
         self.scope = node.scope
         value = None
@@ -77,17 +75,13 @@ class Evaluator:
         self.scope = prevScope
         return value
 
-    def evaluateAssignmentExpression(
-        self, node: BoundAssignmentExpression
-    ) -> Union[str, int, float, bool]:
+    def evaluateAssignmentExpression(self, node: BoundAssignmentExpression):
         self.scope.updateValue(
             node.varName, self.evaluateNode(node.varValue), node.varValue.text_span
         )
         return self.scope.tryGetVariable(node.varName)[1]
 
-    def evaluateBinaryExpression(
-        self, node: BoundBinaryExpression
-    ) -> Union[str, int, float, bool]:
+    def evaluateBinaryExpression(self, node: BoundBinaryExpression):
         # Arithmetic Operators
         if node.operator.isInstance(TokenTypes.PlusOperator):
             if node.type == Types.String:
@@ -126,9 +120,7 @@ class Evaluator:
         if node.operator.isInstance(TokenTypes.LTOperator):
             return self.evaluateNode(node.left) < self.evaluateNode(node.right)
 
-    def evaluateDeclarationExpression(
-        self, node: BoundDeclarationExpression
-    ) -> Union[str, int, float, bool]:
+    def evaluateDeclarationExpression(self, node: BoundDeclarationExpression):
         # For Declaration, value need not be updated as the binder initiates with the value
         # the variable gets.
         # For Assignment, the value cannot be updated in the binder.
@@ -139,9 +131,7 @@ class Evaluator:
 
         return self.scope.tryGetVariable(node.varName)[1]
 
-    def evaluateFunctionCall(
-        self, node: BoundFunctionCall
-    ) -> Union[str, int, float, bool]:
+    def evaluateFunctionCall(self, node: BoundFunctionCall):
         success, func = self.scope.tryGetVariable(node.name)
         if not success:
             # All non declared variables should be taken care of in the binder
@@ -168,30 +158,22 @@ class Evaluator:
 
             return self.evaluateNode(functionBody)
 
-    def evaluateIfCondition(
-        self, node: BoundIfStatement
-    ) -> Union[str, int, float, bool]:
+    def evaluateIfCondition(self, node: BoundIfStatement):
         isTrue = self.evaluateNode(node.condition)
         if isTrue:
             return self.evaluateNode(node.thenBlock)
         elif node.elseBlock:
             return self.evaluateNode(node.elseBlock)
 
-    def evaluateLiteralExpression(
-        self, node: BoundLiteralExpression
-    ) -> Union[str, int, float, bool]:
+    def evaluateLiteralExpression(self, node: BoundLiteralExpression):
         return node.value
 
-    def evaluateReturnStatement(
-        self, node: BoundReturnStatement
-    ) -> Union[str, int, float, bool]:
+    def evaluateReturnStatement(self, node: BoundReturnStatement):
         returnVal = self.evaluateNode(node.to_return)
         self.returnFromBlock = True
         return returnVal
 
-    def evaluateVariableExpression(
-        self, node: BoundVariableExpression
-    ) -> Union[str, int, float, bool]:
+    def evaluateVariableExpression(self, node: BoundVariableExpression):
         success, var = self.scope.tryGetVariable(node.name)
         if not success:
             # All non declared variables should be taken care of in the binder
@@ -199,17 +181,13 @@ class Evaluator:
 
         return self.evaluateNode(var.value)
 
-    def evaluateWhileStatement(
-        self, node: BoundWhileStatement
-    ) -> Union[str, int, float, bool]:
+    def evaluateWhileStatement(self, node: BoundWhileStatement):
         value = None
         while self.evaluateNode(node.condition):
             value = self.evaluateNode(node.whileBlock)
         return value
 
-    def evaluateUnaryExpression(
-        self, node: BoundUnaryExpression
-    ) -> Union[int, float, bool]:
+    def evaluateUnaryExpression(self, node: BoundUnaryExpression):
         if node.operator.isInstance(TokenTypes.MinusOperator):
             return -(self.evaluateNode(node.operand))
 

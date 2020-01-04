@@ -112,3 +112,11 @@ class ErrorBag:
             )
         )
 
+    def unexpectedReturn(self, text_span):
+        self.report(
+            Error(
+                "UnexpectedReturnStatement: return statement are only supposed to be within function calls",
+                text_span,
+            )
+        )
+

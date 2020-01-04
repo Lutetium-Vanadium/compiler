@@ -1,4 +1,5 @@
 from syntax_tree.lexer import Lexer
+from syntax_tree.Node import Node
 from syntax_tree.AssignmentNode import AssignmentNode
 from syntax_tree.BinaryNode import *
 from syntax_tree.BlockStatement import BlockStatement
@@ -17,6 +18,7 @@ from token_handling.TokenTypes import *
 from variables.Variable import Variable, getStatsFromDeclarationKeyword
 from variables.default_functions.InbuiltFunctions import InbuiltFunctions
 from pointers import ptrVal, pointer
+from error.ErrorBag import ErrorBag
 
 
 class Parser:
@@ -26,11 +28,11 @@ class Parser:
         self.index = 0
 
     @property
-    def cur(self):
+    def cur(self) -> Token:
         return self.peek(0)
 
     @property
-    def errorBag(self):
+    def errorBag(self) -> ErrorBag:
         return ptrVal(self._errorBagPtr)
 
     def sanitize(self, tokenList) -> list:
@@ -69,7 +71,7 @@ class Parser:
 
         return BlockStatement(lst)
 
-    def parseStatement(self) -> Union[DeclarationNode, FunctionDeclarationNode, AssignmentNode, IfStatement, WhileStatement, ReturnStatement, BinaryOperatorNode, FunctionCallNode, ExpressionNode]:
+    def parseStatement(self,) -> Node:
         if self.cur.isInstance(TokenTypes.DeclarationKeyword):
             return self.parseDeclareExpression()
 
@@ -95,7 +97,7 @@ class Parser:
 
         return self.parseBinaryExpression()
 
-    def parseDeclareExpression(self) -> Union[DeclarationNode, FunctionDeclarationNode]:
+    def parseDeclareExpression(self) -> Node:
         declarationToken = self.match(TokenTypes.DeclarationKeyword)
         if self.peek(1).isInstance(TokenTypes.AssignmentOperator):
             return DeclarationNode(declarationToken, self.parseAssignmentExpression())
@@ -110,7 +112,9 @@ class Parser:
 
         return AssignmentNode(varNode, right, TokenTypes.AssignmentOperator)
 
-    def parseFunctionDeclaration(self, declarationToken: Token) -> FunctionDeclarationNode:
+    def parseFunctionDeclaration(
+        self, declarationToken: Token
+    ) -> FunctionDeclarationNode:
         varNode = self.parseGeneralExpression(TokenTypes.Variable)
         self.match(TokenTypes.OpenParan)
         params = []
@@ -185,7 +189,7 @@ class Parser:
 
         return ReturnStatement(returnToken, to_return)
 
-    def parseBinaryExpression(self, parentPrecedence=0) -> Union[DeclarationNode, FunctionDeclarationNode, AssignmentNode, IfStatement, WhileStatement, ReturnStatement, BinaryOperatorNode, FunctionCallNode, ExpressionNode, UnaryOperatorNode]:
+    def parseBinaryExpression(self, parentPrecedence=0) -> Node:
         unaryPrecedence = getUnaryPrecedence(self.cur)
         if unaryPrecedence != 0 and unaryPrecedence >= parentPrecedence:
             operator = self.cur
@@ -207,7 +211,7 @@ class Parser:
 
         return left
 
-    def parsePrimaryExpression(self) -> Union[DeclarationNode, FunctionDeclarationNode, AssignmentNode, IfStatement, WhileStatement, ReturnStatement, BinaryOperatorNode, FunctionCallNode, ExpressionNode]:
+    def parsePrimaryExpression(self,) -> Node:
         if self.cur.isInstance(TokenTypes.OpenParan):
             return self.parseParanExpression()
 
@@ -227,7 +231,7 @@ class Parser:
         self.errorBag.unexpectedToken(self.cur, self.cur.text_span)
         self.index += 1
 
-    def parseParanExpression(self) -> Union[DeclarationNode, FunctionDeclarationNode, AssignmentNode, IfStatement, WhileStatement, ReturnStatement, BinaryOperatorNode, FunctionCallNode, ExpressionNode]:
+    def parseParanExpression(self,) -> Node:
         self.match(TokenTypes.OpenParan)
         expression = self.parseStatement()
         self.match(TokenTypes.CloseParan)

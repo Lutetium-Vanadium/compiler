@@ -1,3 +1,4 @@
+from binder.BoundNode import BoundNode
 from binder.BoundAssignmentExpression import BoundAssignmentExpression
 from binder.BoundBinaryExpression import BoundBinaryExpression
 from binder.BoundBlockStatement import BoundBlockStatement
@@ -34,28 +35,30 @@ from variables.FunctionVariable import FunctionVariable
 from variables.Scope import Scope
 from variables.Variable import getStatsFromDeclarationKeyword
 from pointers import ptrVal, pointer
+from error.ErrorBag import ErrorBag
 
 
 class Binder:
     def __init__(self, errorBagPtr: pointer, globalScopePtr: pointer):
-        self.index = 0
         self._errorBagPtr = errorBagPtr
         self._globalScopePointer = globalScopePtr
 
     @property
-    def errorBag(self):
+    def errorBag(self) -> ErrorBag:
         return ptrVal(self._errorBagPtr)
 
     @property
-    def globalScope(self):
+    def globalScope(self) -> Scope:
         return ptrVal(self._globalScopePointer)
 
-    def bind(self, root: BoundNode) -> Union[BoundBlockStatement, BoundDeclarationExpression, BoundAssignmentExpression, BoundBinaryExpression, BoundLiteralExpression, BoundFunctionCall, BoundIfStatement, BoundReturnStatement, BoundWhileStatement, BoundUnaryExpression]:
+    def bind(self, root: BoundNode) -> BoundNode:
+        self.index = 0
         self.root = root
         self.currentScope = self.globalScope
+        self.return_type = None
         return self.bindExpression(self.root)
 
-    def bindExpression(self, node: BoundNode) -> Union[BoundBlockStatement, BoundDeclarationExpression, BoundAssignmentExpression, BoundBinaryExpression, BoundLiteralExpression, BoundFunctionCall, BoundIfStatement, BoundReturnStatement, BoundWhileStatement, BoundUnaryExpression]:
+    def bindExpression(self, node: BoundNode) -> BoundNode:
         if isinstance(node, BlockStatement):
             return self.bindBlockStatement(node)
 
@@ -89,7 +92,9 @@ class Binder:
         if isinstance(node, UnaryOperatorNode):
             return self.bindUnaryExpression(node)
 
-    def bindBlockStatement(self, node: BlockStatement, variables={}, isFunction=False) -> BoundBlockStatement:
+    def bindBlockStatement(
+        self, node: BlockStatement, variables={}, isFunction=False
+    ) -> BoundBlockStatement:
         prevScope = self.currentScope
         if node == self.root:
             scope = self.globalScope
@@ -108,7 +113,9 @@ class Binder:
             lst, scope, Types.Unknown, node.text_span, isFunction
         )
 
-    def bindDeclarationExpression(self, node: DeclarationNode) -> BoundDeclarationExpression:
+    def bindDeclarationExpression(
+        self, node: DeclarationNode
+    ) -> BoundDeclarationExpression:
         varType, isConst = getStatsFromDeclarationKeyword(node.declarationKeyword)
         varName = node.identifier.value
         varValue = self.bindExpression(node.expression)
@@ -128,7 +135,9 @@ class Binder:
             node.declarationKeyword, varType, varName, varValue, node.text_span
         )
 
-    def bindAssignmentExpression(self, node: AssignmentNode) -> BoundAssignmentExpression:
+    def bindAssignmentExpression(
+        self, node: AssignmentNode
+    ) -> BoundAssignmentExpression:
         varName = node.identifier.value
         varValue = self.bindExpression(node.expression)
 
@@ -187,7 +196,9 @@ class Binder:
             func.name, tuple(params), func.type, node.function_type, node.text_span
         )
 
-    def bindFunctionDeclaration(self, node: FunctionDeclarationNode) -> BoundDeclarationExpression:
+    def bindFunctionDeclaration(
+        self, node: FunctionDeclarationNode
+    ) -> BoundDeclarationExpression:
         varType, _ = getStatsFromDeclarationKeyword(node.declarationKeyword)
         varName = node.identifier.value
         varValue = FunctionVariable(varName, varType, node.params, node.text_span)
@@ -195,7 +206,12 @@ class Binder:
         if not self.currentScope.tryAddVariable(varValue, varName):
             self.errorBag.initialiseError(varName, node.identifier.text_span)
 
+        oldType = self.return_type
+        self.return_type = varType
+
         functionBody = self.bindBlockStatement(node.functionBody, node.params, True)
+
+        self.return_type = oldType
 
         varValue.addBody(functionBody)
 
@@ -216,6 +232,13 @@ class Binder:
 
     def bindReturnStatement(self, node: ReturnStatement) -> BoundReturnStatement:
         to_return = self.bindExpression(node.to_return)
+        if self.return_type == None:
+            self.errorBag.unexpectedReturn(to_return.text_span)
+        elif self.return_type != to_return.type:
+            self.errorBag.typeError(
+                to_return.type, self.return_type, to_return.text_span
+            )
+
         return BoundReturnStatement(to_return, node.text_span)
 
     def bindWhileStatement(self, node: WhileStatement) -> BoundWhileStatement:
