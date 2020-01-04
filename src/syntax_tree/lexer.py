@@ -3,6 +3,7 @@ from token_handling.TokenTypes import *
 from token_handling.Token import Token
 from keywords.Keywords import *
 from pointers import ptrVal, pointer
+from error.ErrorBag import ErrorBag
 
 SPECIAL_CHARACTERS = "+-*/%^(){|&<=>!},"
 
@@ -25,24 +26,24 @@ class Lexer:
         return str(self.list)
 
     @property
-    def cur(self):
+    def cur(self) -> chr:
         return self.text[self.index]
 
     @property
-    def next(self):
+    def next(self) -> chr:
         if self.index + 1 == len(self.text):
             return "\0"
         return self.text[self.index + 1]
 
     @property
-    def cur_type(self):
+    def cur_type(self) -> TokenTypes:
         return self.get_type(self.cur)
 
     @property
-    def errorBag(self):
+    def errorBag(self) -> ErrorBag:
         return ptrVal(self._errorBagPtr)
 
-    def get_type(self, char: str):
+    def get_type(self, char: str) -> TokenTypes:
         if char.isspace():
             return TokenTypes.Whitespace
 
@@ -62,7 +63,7 @@ class Lexer:
         self.errorBag.badCharError(char, TextSpan(self.index, 1))
         return TokenTypes.Bad
 
-    def lex(self, text: str):
+    def lex(self, text: str) -> (bool, list):
         self.text = text
         self.list = []
         self.index = 0
@@ -102,7 +103,7 @@ class Lexer:
             else:
                 self.index += 1
 
-    def get_same_block(self, token_type: TokenTypes):
+    def get_same_block(self, token_type: TokenTypes) -> (str, int):
         start = self.index
         while self.index < len(self.text) and self.cur_type == token_type:
             self.index += 1

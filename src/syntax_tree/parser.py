@@ -33,30 +33,30 @@ class Parser:
     def errorBag(self):
         return ptrVal(self._errorBagPtr)
 
-    def sanitize(self, tokenList):
+    def sanitize(self, tokenList) -> list:
         for i in range(len(tokenList) - 1, -1, -1):
             if tokenList[i].isInstance(TokenTypes.Bad, TokenTypes.Whitespace):
                 tokenList.pop(i)
         return tokenList
 
-    def parse(self, tokenList):
+    def parse(self, tokenList) -> BlockStatement:
         self.index = 0
         self.tokenList = self.sanitize(tokenList) + [EOF_TOKEN]
         return self._parse()
 
-    def peek(self, offset: int):
+    def peek(self, offset: int) -> Token:
         if self.index + offset >= len(self.tokenList):
             return self.tokenList[-1]
         return self.tokenList[self.index + offset]
 
-    def match(self, *expectedTokens: list):
+    def match(self, *expectedTokens: list) -> Token:
         cur = self.cur
         if not cur.isInstance(*expectedTokens):
             self.errorBag.tokenError(cur, expectedTokens, cur.text_span)
         self.index += 1
         return cur
 
-    def _parse(self, end_token=TokenTypes.EOF):
+    def _parse(self, end_token=TokenTypes.EOF) -> BlockStatement:
         lst = []
         while not self.cur.isInstance(end_token):
             if self.cur.isInstance(TokenTypes.OpenBrace):
@@ -69,7 +69,7 @@ class Parser:
 
         return BlockStatement(lst)
 
-    def parseStatement(self):
+    def parseStatement(self) -> Union[DeclarationNode, FunctionDeclarationNode, AssignmentNode, IfStatement, WhileStatement, ReturnStatement, BinaryOperatorNode, FunctionCallNode, ExpressionNode]:
         if self.cur.isInstance(TokenTypes.DeclarationKeyword):
             return self.parseDeclareExpression()
 
@@ -95,14 +95,14 @@ class Parser:
 
         return self.parseBinaryExpression()
 
-    def parseDeclareExpression(self):
+    def parseDeclareExpression(self) -> Union[DeclarationNode, FunctionDeclarationNode]:
         declarationToken = self.match(TokenTypes.DeclarationKeyword)
         if self.peek(1).isInstance(TokenTypes.AssignmentOperator):
             return DeclarationNode(declarationToken, self.parseAssignmentExpression())
 
         return self.parseFunctionDeclaration(declarationToken)
 
-    def parseAssignmentExpression(self):
+    def parseAssignmentExpression(self) -> AssignmentNode:
         varNode = self.parseGeneralExpression(TokenTypes.Variable)
         self.match(TokenTypes.AssignmentOperator)
 
@@ -110,7 +110,7 @@ class Parser:
 
         return AssignmentNode(varNode, right, TokenTypes.AssignmentOperator)
 
-    def parseFunctionDeclaration(self, declarationToken: Token):
+    def parseFunctionDeclaration(self, declarationToken: Token) -> FunctionDeclarationNode:
         varNode = self.parseGeneralExpression(TokenTypes.Variable)
         self.match(TokenTypes.OpenParan)
         params = []
@@ -136,7 +136,7 @@ class Parser:
 
         return FunctionDeclarationNode(declarationToken, varNode, params, functionBody)
 
-    def parseCalculateAssignmentExpression(self):
+    def parseCalculateAssignmentExpression(self) -> AssignmentNode:
         varNode = self.parseGeneralExpression(TokenTypes.Variable)
         operator = self.match(*CALC_ASSIGN_OPERATORS)
         assignment_operator = self.match(TokenTypes.AssignmentOperator)
@@ -144,23 +144,7 @@ class Parser:
         newVal = BinaryOperatorNode(varNode, right, operator)
         return AssignmentNode(varNode, newVal, assignment_operator)
 
-    def parseFunctionExpression(self):
-        funcToken = self.match(TokenTypes.Variable)
-        self.match(TokenTypes.OpenParan)
-        params = []
-        if not self.cur.isInstance(TokenTypes.CloseParan):
-            while not self.cur.isInstance(TokenTypes.EOF):
-                params.append(self.parseStatement())
-                if self.cur.isInstance(TokenTypes.CommaToken):
-                    self.index += 1
-                else:
-                    break
-
-        self.match(TokenTypes.CloseParan)
-
-        return FunctionCallNode(funcToken, tuple(params), TokenTypes.Function)
-
-    def parseIfStatement(self):
+    def parseIfStatement(self) -> IfStatement:
         ifToken = self.match(TokenTypes.IfKeyword)
         condition = self.parseStatement()
         openBrace = self.match(TokenTypes.OpenBrace)
@@ -176,7 +160,7 @@ class Parser:
 
         return IfStatement(ifToken, condition, thenBlock, elseBlock)
 
-    def parseWhileStatement(self):
+    def parseWhileStatement(self) -> WhileStatement:
         whileToken = self.match(TokenTypes.WhileKeyword)
         condition = self.parseStatement()
         openBrace = self.match(TokenTypes.OpenBrace)
@@ -184,7 +168,7 @@ class Parser:
 
         return WhileStatement(whileToken, condition, whileBlock)
 
-    def parseForStatement(self):
+    def parseForStatement(self) -> WhileStatement:
         forToken = self.match(TokenTypes.ForKeyword)
         variable = self.parseGeneralExpression(TokenTypes.Variable)
         inToken = self.match(TokenTypes.InKeyword)
@@ -195,13 +179,13 @@ class Parser:
 
         return constructForStatement(variable, upperBound, forBlock)
 
-    def parseReturnStatement(self):
+    def parseReturnStatement(self) -> ReturnStatement:
         returnToken = self.match(TokenTypes.ReturnKeyword)
         to_return = self.parseStatement()
 
         return ReturnStatement(returnToken, to_return)
 
-    def parseBinaryExpression(self, parentPrecedence=0):
+    def parseBinaryExpression(self, parentPrecedence=0) -> Union[DeclarationNode, FunctionDeclarationNode, AssignmentNode, IfStatement, WhileStatement, ReturnStatement, BinaryOperatorNode, FunctionCallNode, ExpressionNode, UnaryOperatorNode]:
         unaryPrecedence = getUnaryPrecedence(self.cur)
         if unaryPrecedence != 0 and unaryPrecedence >= parentPrecedence:
             operator = self.cur
@@ -221,18 +205,9 @@ class Parser:
             right = self.parseBinaryExpression(precedence)
             left = BinaryOperatorNode(left, right, operatorToken)
 
-        if self.cur.isInstance(TokenTypes.PlusPlusOperator) and self.peek(
-            -1
-        ).isInstance(TokenTypes.Variable):
-            left.updateValue(+1)
-        elif self.cur.isInstance(TokenTypes.MinusMinusOperator) and self.peek(
-            -1
-        ).isInstance(TokenTypes.Variable):
-            left.updateValue(-1)
-
         return left
 
-    def parsePrimaryExpression(self):
+    def parsePrimaryExpression(self) -> Union[DeclarationNode, FunctionDeclarationNode, AssignmentNode, IfStatement, WhileStatement, ReturnStatement, BinaryOperatorNode, FunctionCallNode, ExpressionNode]:
         if self.cur.isInstance(TokenTypes.OpenParan):
             return self.parseParanExpression()
 
@@ -252,13 +227,13 @@ class Parser:
         self.errorBag.unexpectedToken(self.cur, self.cur.text_span)
         self.index += 1
 
-    def parseParanExpression(self):
+    def parseParanExpression(self) -> Union[DeclarationNode, FunctionDeclarationNode, AssignmentNode, IfStatement, WhileStatement, ReturnStatement, BinaryOperatorNode, FunctionCallNode, ExpressionNode]:
         self.match(TokenTypes.OpenParan)
         expression = self.parseStatement()
         self.match(TokenTypes.CloseParan)
         return expression
 
-    def parseFunctionExpression(self):
+    def parseFunctionExpression(self) -> FunctionCallNode:
         funcToken = self.match(TokenTypes.Variable)
         if funcToken.value == "print":
             funcType = InbuiltFunctions.Print
@@ -282,6 +257,6 @@ class Parser:
 
         return FunctionCallNode(funcToken, params, TokenTypes.Function, funcType)
 
-    def parseGeneralExpression(self, token_type: TokenTypes):
+    def parseGeneralExpression(self, token_type: TokenTypes) -> ExpressionNode:
         cur = self.match(token_type)
         return ExpressionNode(cur)

@@ -50,12 +50,12 @@ class Binder:
     def globalScope(self):
         return ptrVal(self._globalScopePointer)
 
-    def bind(self, root: BoundNode):
+    def bind(self, root: BoundNode) -> Union[BoundBlockStatement, BoundDeclarationExpression, BoundAssignmentExpression, BoundBinaryExpression, BoundLiteralExpression, BoundFunctionCall, BoundIfStatement, BoundReturnStatement, BoundWhileStatement, BoundUnaryExpression]:
         self.root = root
         self.currentScope = self.globalScope
         return self.bindExpression(self.root)
 
-    def bindExpression(self, node: BoundNode):
+    def bindExpression(self, node: BoundNode) -> Union[BoundBlockStatement, BoundDeclarationExpression, BoundAssignmentExpression, BoundBinaryExpression, BoundLiteralExpression, BoundFunctionCall, BoundIfStatement, BoundReturnStatement, BoundWhileStatement, BoundUnaryExpression]:
         if isinstance(node, BlockStatement):
             return self.bindBlockStatement(node)
 
@@ -89,7 +89,7 @@ class Binder:
         if isinstance(node, UnaryOperatorNode):
             return self.bindUnaryExpression(node)
 
-    def bindBlockStatement(self, node: BlockStatement, variables={}, isFunction=False):
+    def bindBlockStatement(self, node: BlockStatement, variables={}, isFunction=False) -> BoundBlockStatement:
         prevScope = self.currentScope
         if node == self.root:
             scope = self.globalScope
@@ -108,7 +108,7 @@ class Binder:
             lst, scope, Types.Unknown, node.text_span, isFunction
         )
 
-    def bindDeclarationExpression(self, node: DeclarationNode):
+    def bindDeclarationExpression(self, node: DeclarationNode) -> BoundDeclarationExpression:
         varType, isConst = getStatsFromDeclarationKeyword(node.declarationKeyword)
         varName = node.identifier.value
         varValue = self.bindExpression(node.expression)
@@ -128,7 +128,7 @@ class Binder:
             node.declarationKeyword, varType, varName, varValue, node.text_span
         )
 
-    def bindAssignmentExpression(self, node: AssignmentNode):
+    def bindAssignmentExpression(self, node: AssignmentNode) -> BoundAssignmentExpression:
         varName = node.identifier.value
         varValue = self.bindExpression(node.expression)
 
@@ -145,7 +145,7 @@ class Binder:
 
         return BoundAssignmentExpression(varType, varName, varValue, node.text_span)
 
-    def bindBinaryExpression(self, node: BinaryOperatorNode):
+    def bindBinaryExpression(self, node: BinaryOperatorNode) -> BoundBinaryExpression:
         left = self.bindExpression(node.left)
         operator = node.operatorToken
         right = self.bindExpression(node.right)
@@ -154,7 +154,7 @@ class Binder:
 
         return BoundBinaryExpression(resultType, left, operator, right, node.text_span)
 
-    def bindExpressionNode(self, node: ExpressionNode):
+    def bindExpressionNode(self, node: ExpressionNode) -> BoundLiteralExpression:
         if node.isInstance(TokenTypes.Variable):
             success, var = self.currentScope.tryGetVariable(node.value)
             if not success:
@@ -167,7 +167,7 @@ class Binder:
                 getType(node.value), node.value, node.text_span
             )
 
-    def bindFunctionCall(self, node: FunctionCallNode):
+    def bindFunctionCall(self, node: FunctionCallNode) -> BoundFunctionCall:
         success, func = self.currentScope.tryGetVariable(node.name)
         if not success:
             self.errorBag.nameError(node.name, node.text_span)
@@ -187,7 +187,7 @@ class Binder:
             func.name, tuple(params), func.type, node.function_type, node.text_span
         )
 
-    def bindFunctionDeclaration(self, node: FunctionDeclarationNode):
+    def bindFunctionDeclaration(self, node: FunctionDeclarationNode) -> BoundDeclarationExpression:
         varType, _ = getStatsFromDeclarationKeyword(node.declarationKeyword)
         varName = node.identifier.value
         varValue = FunctionVariable(varName, varType, node.params, node.text_span)
@@ -203,7 +203,7 @@ class Binder:
             node.declarationKeyword, varType, varName, varValue, node.text_span
         )
 
-    def bindIfStatement(self, node: IfStatement):
+    def bindIfStatement(self, node: IfStatement) -> BoundIfStatement:
         condition = self.bindExpression(node.condition)
         if condition.type != Types.Bool:
             self.errorBag.typeError(condition.type, Types.Bool, condition.text_span)
@@ -214,11 +214,11 @@ class Binder:
             elseBlock = None
         return BoundIfStatement(condition, thenBlock, elseBlock, node.text_span)
 
-    def bindReturnStatement(self, node: ReturnStatement):
+    def bindReturnStatement(self, node: ReturnStatement) -> BoundReturnStatement:
         to_return = self.bindExpression(node.to_return)
         return BoundReturnStatement(to_return, node.text_span)
 
-    def bindWhileStatement(self, node: WhileStatement):
+    def bindWhileStatement(self, node: WhileStatement) -> BoundWhileStatement:
         condition = self.bindExpression(node.condition)
         if condition.type != Types.Bool:
             self.errorBag.typeError(condition.type, Types.Bool, condition.text_span)
@@ -226,7 +226,7 @@ class Binder:
 
         return BoundWhileStatement(condition, whileBlock, node.text_span)
 
-    def bindUnaryExpression(self, node: UnaryOperatorNode):
+    def bindUnaryExpression(self, node: UnaryOperatorNode) -> BoundUnaryExpression:
         operator = node.operatorToken
         operand = self.bindExpression(node.child)
         operandType, resultType = getUnaryOperatorTypes(operator)
