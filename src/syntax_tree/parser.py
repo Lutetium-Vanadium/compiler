@@ -99,10 +99,25 @@ class Parser:
 
     def parseDeclareExpression(self) -> Node:
         declarationToken = self.match(TokenTypes.DeclarationKeyword)
-        if self.peek(1).isInstance(TokenTypes.AssignmentOperator):
-            return DeclarationNode(declarationToken, self.parseAssignmentExpression())
+        if self.peek(1).isInstance(TokenTypes.OpenParan):
+            return self.parseFunctionDeclaration(declarationToken)
 
-        return self.parseFunctionDeclaration(declarationToken)
+        varNode = self.parseGeneralExpression(TokenTypes.Variable)
+
+        if self.cur.isInstance(TokenTypes.AssignmentOperator):
+            self.index += 1
+
+            right = self.parseStatement()
+            return DeclarationNode(
+                declarationToken, varNode, right, TokenTypes.AssignmentOperator
+            )
+
+        return DeclarationNode(
+            declarationToken,
+            varNode,
+            ExpressionNode(None, TextSpan(-1, 0)),
+            TokenTypes.AssignmentOperator,
+        )
 
     def parseAssignmentExpression(self) -> AssignmentNode:
         varNode = self.parseGeneralExpression(TokenTypes.Variable)

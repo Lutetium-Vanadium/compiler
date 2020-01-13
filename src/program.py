@@ -43,7 +43,7 @@ globalScopePtr = ptr(globalScope)
 lexer = Lexer(errorBagPtr)
 parser = Parser(errorBagPtr)
 binder = Binder(errorBagPtr, globalScopePtr)
-evaluator = Evaluator()
+evaluator = Evaluator(errorBagPtr)
 
 bash = False
 continueToNextLine = False
@@ -145,4 +145,6 @@ while True:
             boundTree.prt(boundTree)
             print()
 
-        print(evaluator.evaluate(boundTree))
+        val = evaluator.evaluate(boundTree)
+        if val != None:
+            print(val)

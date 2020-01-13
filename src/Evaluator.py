@@ -13,12 +13,22 @@ from binder.BoundWhileStatement import BoundWhileStatement
 
 from token_handling.TokenTypes import TokenTypes
 from type_handling.Types import Types
+from type_handling.helperFunctions import getType
 from variables.default_functions.InbuiltFunctions import InbuiltFunctions
 
 from random import random
+from pointers import ptrVal, pointer
+from error.ErrorBag import ErrorBag
 
 
 class Evaluator:
+    def __init__(self, errorBagPtr: pointer):
+        self._errorBagPtr = errorBagPtr
+
+    @property
+    def errorBag(self) -> ErrorBag:
+        return ptrVal(self._errorBagPtr)
+
     def evaluate(self, syntaxTree: BoundBlockStatement):
         self.syntaxTree = syntaxTree
         self.scope = None
@@ -76,10 +86,10 @@ class Evaluator:
         return value
 
     def evaluateAssignmentExpression(self, node: BoundAssignmentExpression):
-        self.scope.updateValue(
-            node.varName, self.evaluateNode(node.varValue), node.varValue.text_span
-        )
-        return self.scope.tryGetVariable(node.varName)[1]
+        val = self.evaluateNode(node.varValue)
+
+        self.scope.updateValue(node.varName, val, node.varValue.text_span)
+        return val
 
     def evaluateBinaryExpression(self, node: BoundBinaryExpression):
         # Arithmetic Operators
@@ -129,6 +139,12 @@ class Evaluator:
         # When evaluating, 'a' has a value of 'a + 2' if the value is updated in the binder,
         # which leads to an infinite loop as 'a' keeps trying to find the value of 'a'.
 
+        if isinstance(node.varValue, BoundFunctionCall):
+            val = self.evaluateFunctionCall(node.varValue)
+
+            self.scope.updateValue(node.varName, val, node.varValue.text_span)
+            return val
+
         return self.scope.tryGetVariable(node.varName)[1]
 
     def evaluateFunctionCall(self, node: BoundFunctionCall):
@@ -147,7 +163,33 @@ class Evaluator:
             params.append(param)
 
         if node.function_type == InbuiltFunctions.Input:
-            return input()
+            input_val = input(*params)
+
+            if node.type == Types.Int:
+                try:
+                    return int(input_val)
+                except:
+                    self.errorBag.typeError(type(input_val), node.type, node.text_span)
+                    return 0
+
+            if node.type == Types.Float:
+                try:
+                    return float(input_val)
+                except:
+                    self.errorBag.typeError(type(input_val), node.type, node.text_span)
+                    return 0.0
+
+            if node.type == Types.Bool:
+                if input_val == "true" or input_val == "false":
+                    return input_val == "true"
+                elif type(input_val) == bool:
+                    return input_val
+
+                self.errorBag.typeError(type(input_val), node.type, node.text_span)
+                return False
+
+            return input_val
+
         if node.function_type == InbuiltFunctions.Random:
             return random()
         if node.function_type == InbuiltFunctions.Print:

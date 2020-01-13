@@ -5,10 +5,10 @@ from variables.default_functions.min import min_func
 from type_handling.Types import Types
 
 inbuiltFunctions = {
-    "print": FunctionVariable(
-        "print", Types.Void, [Variable("text", Types.String)], None
+    "print": FunctionVariable("print", Types.Void, [Variable("text", Types.Any)], None),
+    "input": FunctionVariable(
+        "input", Types.Any, [Variable("prompt", Types.Any)], None
     ),
-    "input": FunctionVariable("input", Types.String, [], None),
     "random": FunctionVariable("random", Types.Float, [], None),
 }
 

@@ -132,7 +132,7 @@ class Binder:
             # varType is guaranteed to not be None as that is handled above
             varValue.type == varType
 
-        if varType != varValue.type:
+        if varType != varValue.type and varValue.type != Types.Any:
             self.errorBag.assignmentTypeError(
                 varValue.type, varType, varValue.text_span
             )
@@ -159,7 +159,7 @@ class Binder:
         else:
             if var.isConst:
                 self.errorBag.reassignConstError(varName, node.identifier.text_span)
-            if var.type != varValue.type:
+            if var.type != varValue.type and varValue.type != Types.Any:
                 self.errorBag.typeError(varValue.type, var.type, varValue.text_span)
             varType = var.type
 
@@ -203,7 +203,7 @@ class Binder:
         for i in range(len(node.params)):
             paramVar = func.params[i]
             param = self.bindExpression(node.params[i])
-            if param.type != func.params[i].type:
+            if param.type != func.params[i].type and func.params[i].type != Types.Any:
                 self.errorBag.typeError(
                     param.type, func.params[i].type, param.text_span
                 )
