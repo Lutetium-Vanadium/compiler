@@ -1,6 +1,7 @@
 from type_handling.Types import Types
 from variables.default_functions.InbuiltFunctions import InbuiltFunctions
 
+
 class FunctionVariable:
     def __init__(self, name, data_type, params, functionBody, text_span=None):
         self.name = name
@@ -14,6 +15,10 @@ class FunctionVariable:
 
     def __str__(self):
         return self.name
+
+    @property
+    def str_params(self):
+        return [var.name for var in self.params]
 
     def addBody(self, functionBody):
         self.functionBody = functionBody

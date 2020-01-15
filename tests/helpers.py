@@ -26,7 +26,7 @@ def run_multiple_expressions(txt_lst, expected_type="string", returnType="single
     lexer = Lexer(errorBagPtr)
     parser = Parser(errorBagPtr)
     binder = Binder(errorBagPtr, scopePtr)
-    evaluator = Evaluator()
+    evaluator = Evaluator(errorBagPtr)
 
     output_lst = []
     for text in txt_lst:

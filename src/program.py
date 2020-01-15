@@ -9,6 +9,7 @@ from variables.default_functions import defaultFunctions
 
 from variables.Scope import Scope
 import readline
+from printing.print_color import print_color, RED
 
 from pointers import ptr
 
@@ -33,6 +34,29 @@ def getIndent(s):
     return s[:i]
 
 
+def prt_help():
+    print("Help menu for REPL:")
+    print(
+        """\
+    Commands:
+        bash - runs all commands as system commands.
+        boundTree - Shows the bound tree.
+        bytecode - Shows the bytecode instructions generated.
+        exit - Exits out of the repl.
+        help - Shows this help menu
+        parseTree - Shows the parsed tree.
+        repl - returns to repl from bash mode.
+    
+    Pre-Command Characters:
+        '$' - Runs this command as bash.
+        '#' - Runs this command as internal python code.
+    """
+    )
+    # setLineNo {int line} - Sets the current line number to the given number.
+    # -- All code written in the lines from {line} to current line number will no longer exist
+    #     and hence all variables and functions declared will no longer exist --
+
+
 errorBag = ErrorBag()
 errorBagPtr = ptr(errorBag)
 
@@ -44,25 +68,23 @@ lexer = Lexer(errorBagPtr)
 parser = Parser(errorBagPtr)
 binder = Binder(errorBagPtr, globalScopePtr)
 evaluator = Evaluator(errorBagPtr)
+codeGenerator = CodeGenerator()
 
 bash = False
 continueToNextLine = False
 expression = ""
 indent = ""
+lineno = 1
 
 while True:
+    s = f"[{lineno}]: "
     if bash:
         s = "$ "
-    elif showParseTree or showBoundTree:
-        if continueToNextLine:
+    if continueToNextLine:
+        if showParseTree or showBoundTree or showBytecode:
             s = "├·· "
         else:
-            s = "┌>> "
-    else:
-        if continueToNextLine:
             s = "··· "
-        else:
-            s = ">>> "
     new_expression = cmd_input(s, indent)
 
     if continueToNextLine:
@@ -75,10 +97,37 @@ while True:
         print()
         continue
 
-    if expression == "exit":
+    command = expression.strip().split()[0]
+    args = expression.strip().split()[1:]
+
+    if command == "exit":
         break
+    if command == "help":
+        prt_help()
+        expression = ""
+        indent = ""
+        continue
+    # if command == "setLineNo":
+    #     if len(args):
+    #         if args[0].isdigit():
+    #             new_lineno = int(args[0])
+    #             if new_lineno < lineno:
+    #                 lineno = new_lineno
+    #                 codeGenerator.changeLineno(new_lineno)
+    #             else:
+    #                 print_color(
+    #                     "\nNew line number must be less than the current line number.\n",
+    #                     fg=RED,
+    #                 )
+    #         else:
+    #             print_color("\nYou can only set line number to an integer.\n", fg=RED)
+    #     else:
+    #         print_color("\nYou need to give a line number.\n", fg=RED)
+    #     expression = ""
+    #     indent = ""
+    #     continue
     if bash:
-        if expression == "repl":
+        if command == "repl":
             bash = False
             expression = ""
             indent = ""
@@ -88,12 +137,12 @@ while True:
         indent = ""
         continue
 
-    if expression == "bash":
+    if command == "bash":
         bash = True
         expression = ""
         indent = ""
         continue
-    if expression == "parseTree":
+    if command == "parseTree":
         showParseTree = not showParseTree
         if showParseTree:
             print("Showing Parsed Tree.")
@@ -102,7 +151,7 @@ while True:
         expression = ""
         indent = ""
         continue
-    if expression == "boundTree":
+    if command == "boundTree":
         showBoundTree = not showBoundTree
         if showBoundTree:
             print("Showing Bound Tree.")
@@ -125,6 +174,7 @@ while True:
     expression += "\n"
 
     errorBag.addText(expression)
+    errorBag.line_num = lineno
     continueToNextLine, tokenList = lexer.lex(expression)
     if continueToNextLine:
         continue

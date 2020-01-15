@@ -21,8 +21,9 @@ def constructForStatement(variable, upperBound, forBlock):
     numberToken = Token(0, TokenTypes.Number, upperBound.text_span.start)
 
     expression = ExpressionNode(numberToken)
-    assignmentNode = AssignmentNode(variable, expression, assignmentToken)
-    variableStatement = DeclarationNode(declarationToken, assignmentNode)
+    variableStatement = DeclarationNode(
+        declarationToken, variable, expression, assignmentToken
+    )
 
     # creating the while statement
     ltToken = Token("<", TokenTypes.LTOperator, -1)
