@@ -7,6 +7,7 @@ class ErrorBag:
     def __init__(self, previousErrorBag=None, text=""):
         self.text = text
         self.errors = []
+        self.line_num = 1
         if previousErrorBag:
             self.errors = previousErrorBag.getErrors()
             self.text = previousErrorBag.text
@@ -22,10 +23,13 @@ class ErrorBag:
 
     def prt(self):
         print()
-        for error in self.errors:
+        for error, lineno in self.errors:
+            s = f"({lineno}, {error.text_span.start})   "
+
             before = self.text[: error.text_span.start]
             cause = self.text[error.text_span.start : error.text_span.end]
             after = self.text[error.text_span.end :]
+            print_color(s, end="", fg=RED)
             print(before, end="")
             print_color(cause, fg=RED, end="")
             print(after)
@@ -38,7 +42,7 @@ class ErrorBag:
         self.errors.extend(errorBag.getErrors())
 
     def report(self, err):
-        self.errors.append(err)
+        self.errors.append([err, self.line_num])
 
     def badCharError(self, char, text_span):
         self.report(

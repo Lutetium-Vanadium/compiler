@@ -1,6 +1,2 @@
 *.pyc
 .vscode/*
-
-# In progress work
-**/CodeGen*
-**/jit.py

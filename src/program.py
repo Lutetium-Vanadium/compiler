@@ -1,11 +1,15 @@
 #!/usr/bin/python3
 import os, sys
 from error.ErrorBag import ErrorBag
+from CodeGen import CodeGenerator
+from executer import execute
 from Evaluator import Evaluator
 from syntax_tree.lexer import Lexer
 from syntax_tree.parser import Parser
 from binder.Binder import Binder
 from variables.default_functions import defaultFunctions
+
+from dis import disassemble
 
 from variables.Scope import Scope
 import readline
@@ -15,6 +19,7 @@ from pointers import ptr
 
 showParseTree = "parseTree" in sys.argv
 showBoundTree = "boundTree" in sys.argv
+showBytecode = "bytecode" in sys.argv
 
 
 def cmd_input(prompt, prefill):
@@ -160,6 +165,15 @@ while True:
         expression = ""
         indent = ""
         continue
+    if command == "bytecode":
+        showBytecode = not showBytecode
+        if showBytecode:
+            print("Showing bytecode.")
+        else:
+            print("Not showing bytecode.")
+        expression = ""
+        indent = ""
+        continue
     if expression[0] == "$":
         os.system(expression[1:])
         expression = ""
@@ -195,6 +209,9 @@ while True:
             boundTree.prt(boundTree)
             print()
 
-        val = evaluator.evaluate(boundTree)
-        if val != None:
-            print(val)
+        # val = evaluator.evaluate(boundTree)
+        code = codeGenerator.generate(boundTree, lineno)
+        if showBytecode:
+            disassemble(code)
+        execute(code)
+        lineno += 1
