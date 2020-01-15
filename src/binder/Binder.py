@@ -4,6 +4,7 @@ from binder.BoundBinaryExpression import BoundBinaryExpression
 from binder.BoundBlockStatement import BoundBlockStatement
 from binder.BoundDeclarationExpression import BoundDeclarationExpression
 from binder.BoundFunctionCall import BoundFunctionCall
+from binder.BoundFunctionDeclaration import BoundFunctionDeclaration
 from binder.BoundIfStatement import BoundIfStatement
 from binder.BoundLiteralExpression import BoundLiteralExpression
 from binder.BoundNode import BoundNode
@@ -232,7 +233,11 @@ class Binder:
 
         varValue.addBody(functionBody)
 
-        return BoundDeclarationExpression(
+        # return BoundDeclarationExpression(
+        #     node.declarationKeyword, varType, varName, varValue, node.text_span
+        # )
+
+        return BoundFunctionDeclaration(
             node.declarationKeyword, varType, varName, varValue, node.text_span
         )
 

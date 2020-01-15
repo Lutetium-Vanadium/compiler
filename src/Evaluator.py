@@ -3,6 +3,7 @@ from binder.BoundBinaryExpression import BoundBinaryExpression
 from binder.BoundBlockStatement import BoundBlockStatement
 from binder.BoundDeclarationExpression import BoundDeclarationExpression
 from binder.BoundFunctionCall import BoundFunctionCall
+from binder.BoundFunctionDeclaration import BoundFunctionDeclaration
 from binder.BoundIfStatement import BoundIfStatement
 from binder.BoundLiteralExpression import BoundLiteralExpression
 from binder.BoundNode import BoundNode
@@ -36,13 +37,10 @@ class Evaluator:
         return self.evaluateNode(self.syntaxTree)
 
     def evaluateNode(self, node: BoundNode):
-        if isinstance(node, BoundDeclarationExpression):
-            return self.evaluateDeclarationExpression(node)
-
         if isinstance(node, BoundBlockStatement):
             return self.evaluateBlockStatement(node)
 
-        if isinstance(node, BoundDeclarationExpression):
+        if isinstance(node, (BoundDeclarationExpression, BoundFunctionDeclaration)):
             return self.evaluateDeclarationExpression(node)
 
         if isinstance(node, BoundAssignmentExpression):
