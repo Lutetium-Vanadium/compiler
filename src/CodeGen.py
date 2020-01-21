@@ -20,7 +20,8 @@ from random import random as _random
 
 
 class CodeGenerator:
-    def __init__(self, file="<module>", name="repl"):
+    def __init__(self, is_repl=True, file="<module>", name="repl"):
+        self.is_repl = is_repl
         self.filename = file
         self.name = name
         self.lineno = 1
@@ -71,9 +72,11 @@ class CodeGenerator:
         self.bytecode.filename = self.filename
         self.bytecode.name = self.name
         self.generateFromNode(boundTreeRoot)
+        if self.is_repl:
+            self.bytecode.append(Instr("PRINT_EXPR", lineno=self.lineno))
+
         self.bytecode.extend(
             [
-                Instr("PRINT_EXPR", lineno=self.lineno),
                 Instr("LOAD_CONST", None, lineno=self.lineno),
                 Instr("RETURN_VALUE", lineno=self.lineno),
             ]
@@ -156,27 +159,32 @@ class CodeGenerator:
                 Instr("LOAD_CONST", node.varName, lineno=self.lineno),
                 Instr("MAKE_FUNCTION", 0, lineno=self.lineno),
                 Instr("STORE_GLOBAL", node.varName, lineno=self.lineno),
-                Instr("LOAD_GLOBAL", node.varName, lineno=self.lineno),
             ]
         )
+        if self.is_repl:
+            self.bytecode.append(Instr("LOAD_GLOBAL", node.varName, lineno=self.lineno))
 
     def generateDeclarationExpression(self, node: BoundDeclarationExpression):
         self.generateFromNode(node.varValue)
-        self.bytecode.extend(
-            [
+        self.bytecode.append(
                 Instr("STORE_FAST", node.varName, lineno=self.lineno),
-                Instr("LOAD_FAST", node.varName, lineno=self.lineno),
-            ]
         )
+        if self.is_repl:
+            self.bytecode.append(
+                Instr("LOAD_FAST", node.varName, lineno=self.lineno),
+
+            )
 
     def generateAssignmentExpression(self, node: BoundAssignmentExpression):
         self.generateFromNode(node.varValue)
-        self.bytecode.extend(
-            [
+        self.bytecode.append(
                 Instr("STORE_FAST", node.varName, lineno=self.lineno),
-                Instr("LOAD_FAST", node.varName, lineno=self.lineno),
-            ]
         )
+
+        if self.is_repl:
+            self.bytecode.append(
+                Instr("LOAD_FAST", node.varName, lineno=self.lineno),
+            )
 
     def generateBinaryExpression(self, node: BoundBinaryExpression):
         self.generateFromNode(node.left)
@@ -293,7 +301,7 @@ class CodeGenerator:
 
         self.generateFromNode(node.whileBlock)
 
-        self.extend([Instr("JUMP_ABSOLUTE", blockLabel, lineno=self.lineno), endLabel])
+        self.bytecode.extend([Instr("JUMP_ABSOLUTE", blockLabel, lineno=self.lineno), endLabel])
 
     def generateUnaryExpression(self, node: BoundUnaryExpression):
         self.generateFromNode(node.operand)

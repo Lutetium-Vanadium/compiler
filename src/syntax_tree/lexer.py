@@ -11,7 +11,7 @@ STRING_MARKERS = "\"'`"
 
 
 class Lexer:
-    def __init__(self, errorBagPtr):
+    def __init__(self, errorBagPtr: pointer):
         self.text = ""
         self.list = []
         self._errorBagPtr = errorBagPtr
