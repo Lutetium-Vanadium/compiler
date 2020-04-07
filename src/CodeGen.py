@@ -8,6 +8,7 @@ from binder.BoundDeclarationExpression import BoundDeclarationExpression
 from binder.BoundFunctionCall import BoundFunctionCall
 from binder.BoundFunctionDeclaration import BoundFunctionDeclaration
 from binder.BoundIfStatement import BoundIfStatement
+from binder.BoundImportStatement import BoundImportStatement
 from binder.BoundLiteralExpression import BoundLiteralExpression
 from binder.BoundNode import BoundNode
 from binder.BoundReturnStatement import BoundReturnStatement
@@ -104,7 +105,10 @@ class CodeGenerator:
 
         return code_obj
 
-    def generateFromNode(self, node: BoundNode):
+    def generateFromNode(self, node: BoundNode, flag=None):
+        if flag == Types.String:
+            self.bytecode.append(Instr("LOAD_GLOBAL", "str", lineno=self.lineno))
+
         if isinstance(node, BoundBlockStatement):
             self.generateBlockStatement(node)
 
@@ -125,6 +129,9 @@ class CodeGenerator:
 
         elif isinstance(node, BoundIfStatement):
             self.generateIfStatement(node)
+        
+        elif isinstance(node, BoundImportStatement):
+            self.generateFromNode(node.boundTree)
 
         elif isinstance(node, BoundLiteralExpression):
             self.generateLiteralExpression(node)
@@ -140,6 +147,9 @@ class CodeGenerator:
 
         elif isinstance(node, BoundUnaryExpression):
             self.generateUnaryExpression(node)
+        
+        if flag == Types.String:
+            self.bytecode.append(Instr("CALL_FUNCTION", 1, lineno=self.lineno))
 
     def generateBlockStatement(self, node: BoundBlockStatement):
         for statement in node.children:
@@ -188,8 +198,8 @@ class CodeGenerator:
             )
 
     def generateBinaryExpression(self, node: BoundBinaryExpression):
-        self.generateFromNode(node.left)
-        self.generateFromNode(node.right)
+        self.generateFromNode(node.left, flag=node.type)
+        self.generateFromNode(node.right, flag=node.type)
 
         # Arithmetic Operators
         if node.operator.isInstance(TokenTypes.PlusOperator):

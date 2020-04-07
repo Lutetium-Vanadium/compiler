@@ -6,9 +6,12 @@ int fact(int n) {
 int sum = 0
 int i = 2
 
+print("importing add")
+import "./add"
+
 while i <= 5 {
     sum += fact(i)
     i += 1
 }
 
-print(sum)
+print(`Sum of first 5 factorials {sum}`)

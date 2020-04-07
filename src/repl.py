@@ -71,7 +71,7 @@ globalScopePtr = ptr(globalScope)
 
 lexer = Lexer(errorBagPtr)
 parser = Parser(errorBagPtr)
-binder = Binder(errorBagPtr, globalScopePtr)
+binder = Binder(errorBagPtr, globalScopePtr, os.getcwd())
 evaluator = Evaluator(errorBagPtr)
 codeGenerator = CodeGenerator()
 

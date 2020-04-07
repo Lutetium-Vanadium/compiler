@@ -6,9 +6,7 @@ from type_handling.Types import Types
 
 inbuiltFunctions = {
     "print": FunctionVariable("print", Types.Void, [Variable("text", Types.Any)], None),
-    "input": FunctionVariable(
-        "input", Types.Any, [Variable("prompt", Types.Any)], None
-    ),
+    "input": FunctionVariable("input", Types.String, [Variable("prompt", Types.Any)], None),
     "random": FunctionVariable("random", Types.Float, [], None),
 }
 

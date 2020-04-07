@@ -1,5 +1,4 @@
 from binder.BoundNode import BoundNode
-from type_handling.Types import Types
 
 
 class BoundIfStatement(BoundNode):

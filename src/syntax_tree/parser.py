@@ -6,6 +6,7 @@ from syntax_tree.BlockStatement import BlockStatement
 from syntax_tree.DeclarationNode import DeclarationNode
 from syntax_tree.ExpressionNode import ExpressionNode
 from syntax_tree.IfStatement import IfStatement
+from syntax_tree.ImportStatement import ImportStatement
 from syntax_tree.ForStatement import constructForStatement
 from syntax_tree.FunctionCallNode import FunctionCallNode
 from syntax_tree.FunctionDeclarationNode import FunctionDeclarationNode
@@ -61,6 +62,10 @@ class Parser:
     def _parse(self, end_token=TokenTypes.EOF) -> BlockStatement:
         lst = []
         while not self.cur.isInstance(end_token):
+            if self.cur.isInstance(TokenTypes.EOF):
+                # Mismatched paranthesis since end_token is not expected to be EOF
+                self.errorBag.unexpectedEOF(end_token)
+                break 
             if self.cur.isInstance(TokenTypes.OpenBrace):
                 self.index += 1
                 lst.append(self._parse(TokenTypes.CloseBrace))
@@ -78,10 +83,11 @@ class Parser:
         if self.cur.isInstance(TokenTypes.Variable):
             if self.peek(1).isInstance(TokenTypes.AssignmentOperator):
                 return self.parseAssignmentExpression()
-            elif self.peek(1).isInstance(*CALC_ASSIGN_OPERATORS) and self.peek(
-                2
-            ).isInstance(TokenTypes.AssignmentOperator):
+            elif self.peek(1).isInstance(*CALC_ASSIGN_OPERATORS) and self.peek(2).isInstance(TokenTypes.AssignmentOperator):
                 return self.parseCalculateAssignmentExpression()
+
+        if self.cur.isInstance(TokenTypes.ImportKeyword):
+            return self.parseImportStatement()
 
         if self.cur.isInstance(TokenTypes.IfKeyword):
             return self.parseIfStatement()
@@ -163,6 +169,12 @@ class Parser:
         newVal = BinaryOperatorNode(varNode, right, operator)
         return AssignmentNode(varNode, newVal, assignment_operator)
 
+    def parseImportStatement(self) -> ImportStatement:
+        importToken = self.match(TokenTypes.ImportKeyword)
+        filePath = self.parseGeneralExpression(TokenTypes.String)
+
+        return ImportStatement(importToken, filePath)
+
     def parseIfStatement(self) -> IfStatement:
         ifToken = self.match(TokenTypes.IfKeyword)
         condition = self.parseStatement()
@@ -223,6 +235,7 @@ class Parser:
             self.index += 1
             right = self.parseBinaryExpression(precedence)
             left = BinaryOperatorNode(left, right, operatorToken)
+            
 
         return left
 

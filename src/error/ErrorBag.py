@@ -1,6 +1,7 @@
 from error.Error import Error
 from printing.print_color import print_color, RED
 from type_handling.Types import Types
+from textSpan import TextSpan
 
 
 class ErrorBag:
@@ -75,7 +76,7 @@ class ErrorBag:
             return
         self.report(
             Error(
-                f"TypeError: '{typeGotten}' cannot be assigned to variable of type '{typeGotten}'",
+                f"TypeError: '{typeGotten}' cannot be assigned to variable of type '{expectedType}'",
                 text_span,
             )
         )
@@ -121,6 +122,14 @@ class ErrorBag:
             Error(
                 "UnexpectedReturnStatement: return statement are only supposed to be within function calls",
                 text_span,
+            )
+        )
+    
+    def unexpectedEOF(self, token):
+        self.report(
+            Error(
+                f"UnexpectedEOF: expected {token} but got EOF",
+                TextSpan(len(self.text)-1, 1)
             )
         )
 

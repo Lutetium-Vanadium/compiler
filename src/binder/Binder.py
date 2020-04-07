@@ -6,6 +6,7 @@ from binder.BoundDeclarationExpression import BoundDeclarationExpression
 from binder.BoundFunctionCall import BoundFunctionCall
 from binder.BoundFunctionDeclaration import BoundFunctionDeclaration
 from binder.BoundIfStatement import BoundIfStatement
+from binder.BoundImportStatement import BoundImportStatement
 from binder.BoundLiteralExpression import BoundLiteralExpression
 from binder.BoundNode import BoundNode
 from binder.BoundReturnStatement import BoundReturnStatement
@@ -13,6 +14,7 @@ from binder.BoundUnaryExpression import BoundUnaryExpression
 from binder.BoundVariableExpression import BoundVariableExpression
 from binder.BoundWhileStatement import BoundWhileStatement
 
+from syntax_tree.Node import Node
 from syntax_tree.AssignmentNode import AssignmentNode
 from syntax_tree.BinaryNode import BinaryOperatorNode
 from syntax_tree.BlockStatement import BlockStatement
@@ -21,6 +23,7 @@ from syntax_tree.ExpressionNode import ExpressionNode
 from syntax_tree.FunctionCallNode import FunctionCallNode
 from syntax_tree.FunctionDeclarationNode import FunctionDeclarationNode
 from syntax_tree.IfStatement import IfStatement
+from syntax_tree.ImportStatement import ImportStatement
 from syntax_tree.ReturnStatement import ReturnStatement
 from syntax_tree.UnaryNode import UnaryOperatorNode
 from syntax_tree.WhileStatement import WhileStatement
@@ -38,11 +41,11 @@ from variables.Variable import getStatsFromDeclarationKeyword
 from pointers import ptrVal, pointer
 from error.ErrorBag import ErrorBag
 
-
 class Binder:
-    def __init__(self, errorBagPtr: pointer, globalScopePtr: pointer):
+    def __init__(self, errorBagPtr: pointer, globalScopePtr: pointer, curpath: str):
         self._errorBagPtr = errorBagPtr
         self._globalScopePointer = globalScopePtr
+        self.curpath = curpath
 
     @property
     def errorBag(self) -> ErrorBag:
@@ -52,14 +55,14 @@ class Binder:
     def globalScope(self) -> Scope:
         return ptrVal(self._globalScopePointer)
 
-    def bind(self, root: BoundNode) -> BoundNode:
+    def bind(self, root: Node) -> BoundNode:
         self.index = 0
         self.root = root
         self.currentScope = self.globalScope
         self.return_type = None
         return self.bindExpression(self.root)
 
-    def bindExpression(self, node: BoundNode) -> BoundNode:
+    def bindExpression(self, node: Node) -> BoundNode:
         if isinstance(node, BlockStatement):
             return self.bindBlockStatement(node)
 
@@ -83,6 +86,9 @@ class Binder:
 
         if isinstance(node, IfStatement):
             return self.bindIfStatement(node)
+        
+        if isinstance(node, ImportStatement):
+            return self.bindImportStatement(node)
 
         if isinstance(node, ReturnStatement):
             return self.bindReturnStatement(node)
@@ -251,6 +257,14 @@ class Binder:
         else:
             elseBlock = None
         return BoundIfStatement(condition, thenBlock, elseBlock, node.text_span)
+    
+    def bindImportStatement(self, node: ImportStatement) -> BoundImportStatement:
+        filePath = self.bindExpressionNode(node.filePath)
+
+        boundNode = BoundImportStatement(filePath, node.text_span, self._globalScopePointer, self.curpath)
+        self.errorBag.extend(boundNode.errorBag)
+
+        return boundNode
 
     def bindReturnStatement(self, node: ReturnStatement) -> BoundReturnStatement:
         to_return = self.bindExpression(node.to_return)

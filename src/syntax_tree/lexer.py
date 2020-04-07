@@ -321,6 +321,8 @@ class Lexer:
             return TokenTypes.WhileKeyword
         elif keyword == "for":
             return TokenTypes.ForKeyword
+        elif keyword == "import":
+            return TokenTypes.ImportKeyword
         elif keyword == "in":
             return TokenTypes.InKeyword
         elif keyword == "range":

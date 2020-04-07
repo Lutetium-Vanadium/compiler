@@ -6,6 +6,7 @@ from error.ErrorBag import ErrorBag
 from variables.Scope import Scope
 from variables.default_functions import defaultFunctions
 from pointers import ptr
+import os
 
 
 def run_multiple_expressions(txt_lst, expected_type="string", returnType="single"):
@@ -25,7 +26,7 @@ def run_multiple_expressions(txt_lst, expected_type="string", returnType="single
 
     lexer = Lexer(errorBagPtr)
     parser = Parser(errorBagPtr)
-    binder = Binder(errorBagPtr, scopePtr)
+    binder = Binder(errorBagPtr, scopePtr, os.getcwd())
     evaluator = Evaluator(errorBagPtr)
 
     output_lst = []

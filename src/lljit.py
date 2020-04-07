@@ -3,15 +3,12 @@ import sys, os
 from error.ErrorBag import ErrorBag
 from variables.Scope import Scope
 from variables.default_functions import defaultFunctions
-from syntax_tree.lexer import Lexer
-from syntax_tree.parser import Parser
-from binder.Binder import Binder
-from CodeGen import CodeGenerator
+from generateBoundTree import generateBoundTree
 from executer import execute
+from CodeGen import CodeGenerator
 
 from pointers import ptr
 from printing.print_color import print_color, RED
-from dis import disassemble
 
 if len(sys.argv) <= 1:
     print_color("\nYou need to input a file name\n", fg=RED)
@@ -35,26 +32,19 @@ scope = Scope()
 scope.addRange(defaultFunctions)
 scopePtr = ptr(scope)
 
-# Initializing the APIs
-lexer = Lexer(errorBagPtr)
-parser = Parser(errorBagPtr)
-binder = Binder(errorBagPtr, scopePtr)
-codeGenerator = CodeGenerator(False, module_name, file_name)
-
-errorBag.addText(text)
-
 print("Compiling...")
-tokenList = lexer.lex(text)[1]
-rootNode = parser.parse(tokenList)
-boundTree = binder.bind(rootNode)
+errorBag.addText(text)
+boundTree = generateBoundTree(text, errorBagPtr, scopePtr, path)
 
 if errorBag.any():
-    print("Failed\n")
+    print(f"Failed\n")
     errorBag.prt()
     quit()
 
-code = codeGenerator.generate(boundTree, 1)
+codeGenerator = CodeGenerator(False, module_name, file_name)
 
-print("Done.\n\n", "-" * os.get_terminal_size().columns, "\n", sep="")
+code = codeGenerator.generate(boundTree, 1)
+    
+print("Done.\n", "-" * os.get_terminal_size().columns, "\n", sep="")
 
 execute(code)

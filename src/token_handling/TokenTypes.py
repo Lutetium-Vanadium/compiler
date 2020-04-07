@@ -18,12 +18,12 @@ class TokenTypes(Enum):
     CommaToken = auto()
 
     # Keywords
-    Keyword = auto()
     DeclarationKeyword = auto()
     IfKeyword = auto()
     ElseKeyword = auto()
     WhileKeyword = auto()
     ForKeyword = auto()
+    ImportKeyword = auto()
     InKeyword = auto()
     RangeKeyword = auto()
     ReturnKeyword = auto()
