@@ -1,4 +1,5 @@
 from bytecode import Bytecode, Instr, Label, Compare
+import sys
 
 from binder.BoundAssignmentExpression import BoundAssignmentExpression
 from binder.BoundBinaryExpression import BoundBinaryExpression
@@ -291,10 +292,11 @@ class CodeGenerator:
         blockLabel = Label()
         endLabel = Label()
 
-        self.bytecode.extend(
-            [Instr("SETUP_LOOP", endLabel, lineno=self.lineno), blockLabel]
-        )
+        # No longer required from python 3.8 onwards
+        if sys.version_info.minor <= 7:
+            self.bytecode.append(Instr("SETUP_LOOP", endLabel, lineno=self.lineno))
 
+        self.bytecode.append(blockLabel)
         self.generateFromNode(node.condition)
 
         self.bytecode.append(Instr("POP_JUMP_IF_FALSE", endLabel, lineno=self.lineno))
