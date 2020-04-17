@@ -28,22 +28,20 @@ from syntax_tree.ReturnStatement import ReturnStatement
 from syntax_tree.UnaryNode import UnaryOperatorNode
 from syntax_tree.WhileStatement import WhileStatement
 from token_handling.TokenTypes import TokenTypes
-from type_handling.helperFunctions import (
-    checkBinaryType,
-    getType,
-    getUnaryOperatorTypes,
-)
+from type_handling.helperFunctions import checkBinaryType, getType, getUnaryOperatorTypes
 
-from type_handling.Types import Types
+from type_handling.Types import Types, List
 from variables.FunctionVariable import FunctionVariable
 from variables.Scope import Scope
 from variables.Variable import getStatsFromDeclarationKeyword
 from pointers import ptrVal, pointer
 from error.ErrorBag import ErrorBag
+from textSpan import TextSpan
 
 class Binder:
     def __init__(self, errorBagPtr: pointer, globalScopePtr: pointer, curpath: str):
         self._errorBagPtr = errorBagPtr
+
         self._globalScopePointer = globalScopePtr
         self.curpath = curpath
 
@@ -177,7 +175,17 @@ class Binder:
         operator = node.operatorToken
         right = self.bindExpression(node.right)
 
-        resultType = checkBinaryType(operator, left, right, self._errorBagPtr)
+        resultType, success = checkBinaryType(operator, left, right, self._errorBagPtr)
+
+        if success and isinstance(left, BoundLiteralExpression) and isinstance(right, BoundLiteralExpression):
+            start = left.text_span.start
+            length = right.text_span.end - start
+            text_span = TextSpan(start, length)
+
+            value = evaluateBinaryExpression(left.value, right.value, operator, resultType)
+
+            return BoundLiteralExpression(resultType, value, text_span, resultType == Types.List)
+
 
         return BoundBinaryExpression(resultType, left, operator, right, node.text_span)
 
@@ -194,11 +202,20 @@ class Binder:
         else:
             if node.isList:
                 val = [self.bindExpression(i) for i in node.value]
+
+                itemType = Types.Any
+
+                if len(val):
+                    itemType = val[0].type
+
+                for i in val:
+                    if i.type != itemType:
+                        self.errorBag.typeError(i.type, itemType, i.text_span)
+                typ = List(itemType)
             else:
                 val = node.value
-            return BoundLiteralExpression(
-                getType(val), val, node.text_span, node.isList
-            )
+                typ = getType(val)
+            return BoundLiteralExpression(typ, val, node.text_span, node.isList)
 
     def bindFunctionCall(self, node: FunctionCallNode) -> BoundFunctionCall:
         success, func = self.currentScope.tryGetVariable(node.name)
@@ -303,3 +320,41 @@ class Binder:
             self.errorBag.typeError(operand.type, operandType, operand.text_span)
 
         return BoundUnaryExpression(resultType, operator, operand, node.text_span)
+
+
+def evaluateBinaryExpression(left, right, operator, typ):
+    # Arithmetic Operators
+    if operator.isInstance(TokenTypes.PlusOperator):
+        if typ == Types.String:
+            return str(left) + str(right)
+        return left + right
+    if operator.isInstance(TokenTypes.MinusOperator):
+        return left - right
+    if operator.isInstance(TokenTypes.StarOperator):
+        return left * right
+    if operator.isInstance(TokenTypes.SlashOperator):
+        if typ == Types.Int:
+            return left // right
+        return left / right
+    if operator.isInstance(TokenTypes.ModOperator):
+        return left % right
+    if operator.isInstance(TokenTypes.CaretOperator):
+        return left ** right
+
+    # Boolean Operators
+    if operator.isInstance(TokenTypes.OrOperator):
+        return left or right
+    if operator.isInstance(TokenTypes.AndOperator):
+        return left and right
+    if operator.isInstance(TokenTypes.NEOperator):
+        return left != right
+    if operator.isInstance(TokenTypes.EEOperator):
+        return left == right
+    if operator.isInstance(TokenTypes.GEOperator):
+        return left >= right
+    if operator.isInstance(TokenTypes.GTOperator):
+        return left > right
+    if operator.isInstance(TokenTypes.LEOperator):
+        return left <= right
+    if operator.isInstance(TokenTypes.LTOperator):
+        return left < right

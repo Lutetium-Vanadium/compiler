@@ -11,3 +11,19 @@ class Types(Enum):
     String = auto()
     Unknown = auto()
     Void = auto()
+
+
+class List:
+    def __init__(self, typ):
+        self.type = typ
+
+    def __eq__(self, other):
+        if not isinstance(other, List):
+            return False
+        return self.type == other.type
+    
+    def __str__(self):
+        return f"List<{self.type}>"
+
+    def __repr__(self):
+        return f"List<{self.type}>"

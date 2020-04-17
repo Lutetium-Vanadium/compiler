@@ -44,32 +44,39 @@ def checkBinaryType(
     if operator.isInstance(TokenTypes.EEOperator):
         if right.type != left.type:
             errorBag.typeError(right.type, left.type, right.text_span)
-        return Types.Bool
+            return Types.Bool, False
+        return Types.Bool, True
 
     if left.type == Types.String or right.type == Types.String:
         if operator.isInstance(TokenTypes.PlusOperator):
-            return Types.String
+            return Types.String, True
         if operator.isInstance(TokenTypes.StarOperator):
             if left.type == Types.String and right.type != Types.Int:
                 errorBag.typeError(right.type, Types.String, right.text_span)
+                return Types.String, False
             if right.type == Types.String and left.type != Types.Int:
                 errorBag.typeError(left.type, Types.String, left.text_span)
-            return Types.String
+                return Types.String, False
+            return Types.String, True
 
     if left.type == Types.List or right.type == Types.String:
         if operator.isInstance(TokenTypes.PlusOperator):
             if left.type == Types.List and right.type != Types.List:
                 errorBag.typeError(right.type, Types.List, right.text_span)
+                return Types.List, False
             if right.type == Types.List and left.type != Types.List:
                 errorBag.typeError(left.type, Types.List, left.text_span)
-            return Types.List
+                return Types.List, False
+            return Types.List, True
 
         if operator.isInstance(TokenTypes.StarOperator):
             if left.type == Types.List and right.type != Types.Int:
                 errorBag.typeError(right.type, Types.List, right.text_span)
+                return Types.List, False
             if right.type == Types.List and left.type != Types.Int:
                 errorBag.typeError(left.type, Types.List, left.text_span)
-            return Types.List
+                return Types.List, False
+            return Types.List, True
 
     # Arithmetic Operators
     if operator.isInstance(
@@ -81,24 +88,24 @@ def checkBinaryType(
         TokenTypes.CaretOperator,
     ):
         if not isNumber(left.type):
-            errorBag.typeError(
-                left.type, f"{Types.Int}> or <{Types.Float}", left.text_span
-            )
+            errorBag.typeError(left.type, f"{Types.Int}> or <{Types.Float}", left.text_span)
+            return Types.Float, False
         if not isNumber(right.type):
-            errorBag.typeError(
-                right.type, f"{Types.Int}> or <{Types.Float}", right.text_span
-            )
+            errorBag.typeError(right.type, f"{Types.Int}> or <{Types.Float}", right.text_span)
+            return Types.Float, False
         if left.type == right.type == Types.Int:
-            return Types.Int
-        return Types.Float
+            return Types.Int, True
+        return Types.Float, True
 
     # Boolean Operators
     if operator.isInstance(TokenTypes.OrOperator, TokenTypes.AndOperator):
         if left.type != Types.Bool:
             errorBag.typeError(left.type, Types.Bool, left.text_span)
+            return Types.Bool, False
         if right.type != Types.Bool:
             errorBag.typeError(right.type, Types.Bool, right.text_span)
-        return Types.Bool
+            return Types.Bool, False
+        return Types.Bool, True
 
     if operator.isInstance(
         TokenTypes.NEOperator,
@@ -108,14 +115,12 @@ def checkBinaryType(
         TokenTypes.LTOperator,
     ):
         if not isNumber(left.type):
-            errorBag.typeError(
-                left.type, f"{Types.Int}> or <{Types.Float}", left.text_span
-            )
+            errorBag.typeError(left.type, f"{Types.Int}> or <{Types.Float}", left.text_span)
+            return Types.Bool, False
         if not isNumber(right.type):
-            errorBag.typeError(
-                right.type, f"{Types.Int}> or <{Types.Float}", right.text_span
-            )
+            errorBag.typeError(right.type, f"{Types.Int}> or <{Types.Float}", right.text_span)
+            return Types.Bool, False
 
-        return Types.Bool
+        return Types.Bool, True
 
     raise EnvironmentError("Python is dying")

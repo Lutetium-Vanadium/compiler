@@ -55,6 +55,8 @@ class Parser:
     def match(self, *expectedTokens: list) -> Token:
         cur = self.cur
         if not cur.isInstance(*expectedTokens):
+            if len(expectedTokens) == 1:
+                expectedTokens = expectedTokens[0]
             self.errorBag.tokenError(cur, expectedTokens, cur.text_span)
         self.index += 1
         return cur
@@ -105,6 +107,18 @@ class Parser:
 
     def parseDeclareExpression(self) -> Node:
         declarationToken = self.match(TokenTypes.DeclarationKeyword)
+        if declarationToken.value == "list":
+            start = self.match(TokenTypes.LTOperator)
+            subtype = self.match(TokenTypes.DeclarationKeyword)
+            if subtype.value in ["const", "var"]:
+                self.errorBag.unexpectedToken(subtype, subtype.text_span)
+            end = self.match(TokenTypes.GTOperator)
+
+            value = f"{declarationToken.value}<{subtype.value}>"
+
+            declarationToken = Token(value, TokenTypes.List, declarationToken.text_span.start)
+
+
         if self.peek(1).isInstance(TokenTypes.OpenParan):
             return self.parseFunctionDeclaration(declarationToken)
 
@@ -114,9 +128,7 @@ class Parser:
             self.index += 1
 
             right = self.parseStatement()
-            return DeclarationNode(
-                declarationToken, varNode, right, TokenTypes.AssignmentOperator
-            )
+            return DeclarationNode(declarationToken, varNode, right, TokenTypes.AssignmentOperator)
 
         return DeclarationNode(
             declarationToken,

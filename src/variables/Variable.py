@@ -1,4 +1,4 @@
-from type_handling.Types import Types
+from type_handling.Types import Types, List
 
 
 class Variable:
@@ -57,7 +57,7 @@ def getStatsFromDeclarationKeyword(declarationKeyword):
         return Types.String, False
     if declarationKeyword == "bool":
         return Types.Bool, False
-    if declarationKeyword == "list":
-        return Types.List, False
+    if declarationKeyword[:4] == "list":
+        return List(getStatsFromDeclarationKeyword(declarationKeyword[5:-1])[0]), False
 
     return Types.Unknown, False
